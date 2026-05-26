@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Smoky House — Внутрішнє меню</title>
+  <meta name="description" content="Smoky House — внутрішня версія меню для персоналу. Повний асортимент: їжа, суші, напої, бар, коктейлі, кальяни.">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="googlebot" content="noindex, nofollow">
+  <link rel="icon" type="image/png" sizes="32x32" href="img/SMOKY.png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Internal version — no structured data for search engines -->
+</head>
+<body>
+
+<!-- Smoke background -->
+<div class="smoke-bg"><canvas id="smoke-canvas"></canvas></div>
+
+<!-- Header (оригінальний дизайн) -->
+<header>
+  <a href="index.html" class="logo-text">SMOKY<span>HOUSE</span></a>
+  <nav>
+    <a href="#about">Про нас</a>
+    <a href="#why-us">Переваги</a>
+    <a href="#contact">Контакти</a>
+  </nav>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <h1 class="neon-title">SMOKY HOUSE</h1>
+  <p id="hero-slogan">Повне внутрішнє меню закладу — їжа, суші, напої, бар, коктейлі та кальяни. Smoky House, Харків, вул. Гвардійців-Широнінців, 51/1.</p>
+  <div class="hero-buttons">
+    <a href="tel:+38(077)777-19-25" id="hero-phone-btn" class="btn btn-primary">Забронювати стіл</a>
+    <a href="menu.html" class="btn btn-secondary">Переглянути меню</a>
+  </div>
+</section>
+
+<!-- About -->
+<section id="about" class="section reveal">
+  <h2>Про <span>нас</span></h2>
+  <p class="about-text reveal" id="about-text" style="transition-delay:0.15s">
+    Ми — більше, ніж кальянна. Smoky House — це атмосфера, де зустрічаються люди зі смаком. Місце для відпочинку, живого спілкування, авторських коктейлів, смачної кухні та найкращих кальянів у Харкові. Ми створюємо простір, у який хочеться повертатися знову.
+  </p>
+</section>
+
+<!-- Why us -->
+<section id="why-us" class="section">
+  <h2 class="reveal">Чому <span>ми</span></h2>
+  <div class="features">
+    <div class="card reveal-left reveal-delay-1">
+      <div class="card-icon">🔥</div>
+      <h3>Унікальні кальяни</h3>
+      <p>Автори унікальних міксів. Майстри з багаторічним досвідом, які створюють неповторні смакові композиції спеціально під твій настрій.</p>
+    </div>
+    <div class="card reveal reveal-delay-2">
+      <div class="card-icon">⚡</div>
+      <h3>Інновації для цінителів</h3>
+      <p>Використовуємо електрочаші. Чистий смак без присмаку вугілля, точний контроль температури та максимальне задоволення від куріння з першої до останньої затяжки.</p>
+    </div>
+    <div class="card reveal-right reveal-delay-3">
+      <div class="card-icon">🍹</div>
+      <h3>Вибух смаку</h3>
+      <p>Авторські напої та лимонади, розроблені нашими майстрами, щоб ідеально доповнити твій вечір та підкреслити смак кальяну.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Contacts -->
+<section id="contact" class="section reveal">
+  <h2>Наші <span>контакти</span></h2>
+  <div class="contact-info">
+    <p class="reveal-left reveal-delay-1" id="contact-address"><span class="icon">📍</span> Харків, вул. Гвардійців-Широнінців, 51/1</p>
+    <p class="reveal-right reveal-delay-2" id="contact-phone"><span class="icon">📞</span> +38(077) 777-19-25</p>
+  </div>
+  <br>
+  <a href="https://www.instagram.com/Smoky.House_kh" id="instagram-link" target="_blank" rel="noopener noreferrer" class="btn btn-primary reveal-scale" style="transition-delay:0.3s">Написати в Instagram</a>
+</section>
+
+<!-- Map -->
+<section class="section reveal">
+  <h2>Як нас <span>знайти</span></h2>
+  <div class="map-wrapper">
+    <iframe
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2564.016964554736!2d36.3352550788175!3d50.01103724139168!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x412709798f92871b%3A0x545b70f7a4c2b819!2zU21va3kgSG91c2UgLSDQlNC40LzQvdC40Lkg0JHQsNGAIHwg0JrQvtC60YLQtdC50LvRliB8IFBsYXlTdGF0aW9uIHwg0JrRg9GF0L3Rjw!5e0!3m2!1sru!2sua!4v1776958926511!5m2!1sru!2sua"
+      loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+    <div class="map-address" id="map-address-label"><span class="icon">📍</span> Харків, вул. Гвардійців-Широнінців, 51/1</div>
+  </div>
+</section>
+
+<footer>© 2026 Smoky House. Усі права захищені. Розроблено з ❤️ для справжніх цінителів диму.</footer>
+
+<script>
+// Динамічне завантаження налаштувань з Google Sheets
+(async function() {
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdwv4JlTUph-APvm7VUj0mCO86vWLgAcJofcJi-IbV59QqEczVaPlM0v6Y77dUNSTakA/exec';
+  try {
+    const response = await fetch(SCRIPT_URL + '?action=getItems');
+    const data = await response.json();
+    if (data && data.settings) {
+      const s = data.settings;
+      if (s.phone) {
+        document.getElementById('hero-phone-btn').href = 'tel:' + s.phone;
+        document.getElementById('contact-phone').innerHTML = `<span class="icon">📞</span> ${s.phone}`;
+      }
+      if (s.address) {
+        document.getElementById('contact-address').innerHTML = `<span class="icon">📍</span> ${s.address}`;
+        document.getElementById('map-address-label').innerHTML = `<span class="icon">📍</span> ${s.address}`;
+      }
+      if (s.instagram) {
+        document.getElementById('instagram-link').href = s.instagram;
+      }
+      if (s.slogan) {
+        document.getElementById('hero-slogan').textContent = s.slogan;
+      }
+      if (s.about) {
+        document.getElementById('about-text').textContent = s.about;
+      }
+    }
+  } catch(e) {
+    console.log('Динамічні налаштування не завантажені, використано локальний шаблон.', e);
+  }
+})();
+
+/* Smoke canvas */
+(function() {
+  const canvas = document.getElementById('smoke-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  class Particle {
+    constructor(init) { this.reset(init); }
+    reset(init) {
+      this.x = W * 0.05 + Math.random() * W * 0.9;
+      this.y = init ? H * (0.7 + Math.random() * 0.45) : H + 20 + Math.random() * 60;
+      this.radius = 50 + Math.random() * 110;
+      this.alpha = 0;
+      this.targetAlpha = 0.045 + Math.random() * 0.085;
+      this.vx = (Math.random() - 0.5) * 0.28;
+      this.vy = -(0.28 + Math.random() * 0.42);
+      this.life = 0;
+      this.maxLife = 320 + Math.random() * 220;
+      const warm = Math.random() < 0.25;
+      this.r = warm ? 255 : 205 + Math.floor(Math.random() * 50);
+      this.g = warm ? 218 : 205 + Math.floor(Math.random() * 50);
+      this.b = warm ? 120 : 205 + Math.floor(Math.random() * 50);
+    }
+    update() {
+      this.life++;
+      const p = this.life / this.maxLife;
+      if (p < 0.15)      this.alpha = (p / 0.15) * this.targetAlpha;
+      else if (p > 0.65) this.alpha = ((1 - p) / 0.35) * this.targetAlpha;
+      else               this.alpha = this.targetAlpha;
+      this.x += this.vx + Math.sin(this.life * 0.016 + this.startPhase) * 0.3;
+      this.y += this.vy;
+      this.radius += 0.22;
+      if (this.life >= this.maxLife) this.reset(false);
+    }
+    draw() {
+      const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+      g.addColorStop(0,   `rgba(${this.r},${this.g},${this.b},${this.alpha})`);
+      g.addColorStop(0.4, `rgba(${this.r},${this.g},${this.b},${this.alpha * 0.55})`);
+      g.addColorStop(1,   `rgba(${this.r},${this.g},${this.b},0)`);
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 55; i++) {
+    const p = new Particle(true);
+    p.startPhase = Math.random() * Math.PI * 2;
+    p.life = Math.floor(Math.random() * p.maxLife);
+    particles.push(p);
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* Scroll reveal */
+const ro = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => ro.observe(el));
+</script>
+<script>
+(function(){
+  const header = document.querySelector('header');
+  const hero = document.querySelector('.hero');
+  if (!header || !hero) return;
+  function adjustHero(){
+    const h = header.offsetHeight || 60;
+    const extra = window.innerWidth <= 800 ? 110 : 100;
+    hero.style.paddingTop = (h + extra) + 'px';
+  }
+  window.addEventListener('resize', adjustHero, {passive:true});
+  window.addEventListener('load', adjustHero);
+  adjustHero();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Меню — Smoky House | Внутрішня версія</title>
+  <meta name="description" content="Повне меню Smoky House: їжа, суші, напої, бар, коктейлі, кальяни.">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="googlebot" content="noindex, nofollow">
+  <link rel="icon" type="image/png" sizes="32x32" href="img/SMOKY.png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+  /* ── Tabs: центр на десктопі, скрол на мобілі ── */
+  .tabs-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 500;
+    background: rgba(5,5,8,0.75);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    backdrop-filter: blur(50px);
+    -webkit-backdrop-filter: blur(50px);
+    padding-top: 68px;
+  }
+  .tabs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  /* На мобілі якщо табів більше ніж влізає — вирівнюємо по лівому краю */
+  @media (max-width: 600px) {
+    .tabs { justify-content: flex-start; }
+    .tabs-wrapper { padding-top: 62px; }
+  }
+
+  /* ── Зумабельне модальне фото ── */
+  .modal-img-container {
+    position: relative;
+    width: 100%;
+    height: 320px;
+    max-height: 48vh;
+    overflow: hidden;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    background: #000;
+    cursor: zoom-in;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-img-container .modal-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.22s cubic-bezier(0.1,0.8,0.3,1);
+    transform-origin: center center;
+  }
+  .modal-img-container.zoomed { cursor: zoom-out; }
+  .zoom-hint {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    pointer-events: none;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+    z-index: 10;
+  }
+  .modal-img-container.zoomed .zoom-hint { opacity: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="menu-page">
+
+<!-- Smoke background -->
+<div class="smoke-bg"><canvas id="smoke-canvas"></canvas></div>
+
+<!-- Top bar -->
+<div class="top-bar">
+  <a href="index.html" class="back-btn">
+    <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    Назад
+  </a>
+  <div class="logo-text">SMOKY<span>HOUSE</span></div>
+</div>
+
+<!-- Tab navigation -->
+<div class="tabs-wrapper">
+  <div class="tabs" id="tabsScroll">
+    <button class="tab-btn active" onclick="showTab('food', this)">🍽 Їжа</button>
+    <button class="tab-btn" onclick="showTab('sushi', this)">🍣 Суші та роли</button>
+    <button class="tab-btn" onclick="showTab('drinks', this)">☕ Напої</button>
+    <button class="tab-btn" onclick="showTab('lemonades', this)">🍋 Лимонади</button>
+    <button class="tab-btn" onclick="showTab('teas', this)">🫖 Чаї</button>
+    <button class="tab-btn" onclick="showTab('bar', this)">🥃 Бар</button>
+    <button class="tab-btn" onclick="showTab('cocktails', this)">🍹 Коктейлі</button>
+    <button class="tab-btn" onclick="showTab('hookah', this)">💨 Кальян</button>
+  </div>
+  <div class="tabs-nav" id="tabs-nav-arrow">›</div>
+</div>
+
+<div class="container" id="menu-container">
+  <div id="menu-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;gap:16px">
+    <div style="width:36px;height:36px;border:3px solid rgba(255,230,0,0.15);border-top-color:#ffe600;border-radius:50%;animation:spin .8s linear infinite"></div>
+    <div style="color:#888;font-size:13px;letter-spacing:1px">Завантажуємо меню...</div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="item-modal" class="modal-overlay" onclick="closeModal()">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <span class="modal-close" onclick="closeModal()">&times;</span>
+    <div class="modal-img-container" id="modal-img-wrap" style="display:none">
+      <img class="modal-img" id="modal-image" src="" alt="">
+      <div class="zoom-hint">Натисніть для збільшення</div>
+    </div>
+    <h2 class="modal-name"></h2>
+    <div class="modal-weight"></div>
+    <div class="modal-price"></div>
+    <p class="modal-desc"></p>
+  </div>
+</div>
+
+<footer>© 2026 Smoky House. Усі права захищені. Розроблено з ❤️ для справжніх цінителів диму.</footer>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdwv4JlTUph-APvm7VUj0mCO86vWLgAcJofcJi-IbV59QqEczVaPlM0v6Y77dUNSTakA/exec';
+const SHEET_ID   = '11_ZzSiF9TqEuJZGf7-ziqmp359JJOqrXmOwu59vo2m4';
+
+// Повне меню з алкоголем (внутрішня версія)
+const TAB_TO_CAT = {
+  food: 'food',
+  sushi: 'sushi',
+  drinks: 'drinks',
+  lemonades: 'lemon',
+  teas: 'tea',
+  bar: 'bar',
+  cocktails: 'cocktails',
+  hookah: 'hook'
+};
+
+const TAB_TITLES = {
+  food: '🍽 Їжа',
+  sushi: '🍣 Суші та роли',
+  drinks: '☕ Напої',
+  lemonades: '🍋 Лимонади',
+  teas: '🫖 Чаї',
+  bar: '🥃 Бар',
+  cocktails: '🍹 Коктейлі',
+  hookah: '💨 Кальян'
+};
+
+const GRID_PHOTO_CATS = new Set(['food', 'sushi']);
+const LIST_CATS = new Set(['drinks']);
+// Всі інші — текстова сітка (lemon, tea, hook)
+
+let ALL_ITEMS = [];
+let activeTab = 'food';
+
+async function loadMenu() {
+  try {
+    const r = await fetch(SCRIPT_URL + '?action=getItems');
+    const d = await r.json();
+    if (d && d.items && d.items.length) {
+      // Внутрішня версія: показуємо всі видимі позиції включно з баром та коктейлями
+      ALL_ITEMS = d.items.filter(i => {
+        const vis = i.vis === true || i.vis === 'TRUE' || i.vis === 'true' || i.vis === 1 || i.vis === '1';
+        return vis;
+      });
+      renderAll();
+      return;
+    }
+    await loadCSV();
+  } catch(e) { await loadCSV(); }
+}
+
+async function loadCSV() {
+  try {
+    const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Menu`);
+    const t = await r.text();
+    ALL_ITEMS = parseCSV(t);
+    renderAll();
+  } catch(e) {
+    document.getElementById('menu-container').innerHTML =
+      '<div style="color:#f07070;text-align:center;padding:40px 20px;font-size:13px">⚠️ Не вдалося завантажити меню.<br><span style="color:#888;font-size:11px">Перевірте підключення до інтернету.</span></div>';
+  }
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  function parseLine(line) {
+    const res = []; let inQ = false, cur = '';
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ;
+      } else if (ch === ',' && !inQ) { res.push(cur); cur = ''; }
+      else cur += ch;
+    }
+    res.push(cur); return res;
+  }
+  const headers = parseLine(lines[0]);
+  return lines.slice(1).map(line => {
+    const vals = parseLine(line), obj = {};
+    headers.forEach((h, i) => obj[h.trim()] = (vals[i] || '').trim());
+    obj.vis = obj.vis !== 'FALSE' && obj.vis !== 'false' && obj.vis !== '0';
+    obj.price = parseInt(obj.price) || 0;
+    return obj;
+  }).filter(i => i.name && i.vis);
+}
+
+function renderAll() {
+  const container = document.getElementById('menu-container');
+  container.innerHTML = '';
+
+  Object.keys(TAB_TO_CAT).forEach(tab => {
+    const cat = TAB_TO_CAT[tab];
+    const items = ALL_ITEMS.filter(i => i.cat === cat);
+    const sec = document.createElement('div');
+    sec.id = 'tab-' + tab;
+    sec.className = 'category-section' + (tab === activeTab ? ' active' : '');
+    sec.innerHTML = buildCategory(tab, cat, items);
+    container.appendChild(sec);
+  });
+
+  container.querySelectorAll('.menu-card-photo').forEach(card => {
+    card.addEventListener('click', () => {
+      openModal(card, card.dataset.name, card.dataset.weight, card.dataset.price, card.dataset.photo, card.dataset.desc);
+    });
+  });
+  container.querySelectorAll('.menu-card').forEach(card => {
+    if (card.dataset.desc || card.dataset.photo) {
+      card.addEventListener('click', () => {
+        openModal(card, card.dataset.name, card.dataset.weight, card.dataset.price, card.dataset.photo, card.dataset.desc);
+      });
+    }
+  });
+}
+
+function buildCategory(tab, cat, items) {
+  const title = TAB_TITLES[tab] || tab;
+  if (!items.length) return `<div class="section-title">${title}</div><p style="color:#888;font-size:13px;padding:20px 0">Позиції відсутні</p>`;
+  if (LIST_CATS.has(cat)) return buildListCategory(title, items);
+  if (GRID_PHOTO_CATS.has(cat)) return buildPhotoGridCategory(title, items);
+  return buildTextGridCategory(title, items);
+}
+
+function buildPhotoGridCategory(title, items) {
+  const groups = {};
+  items.forEach(i => { const s = i.subcat||''; if(!groups[s]) groups[s]=[]; groups[s].push(i); });
+  let html = `<div class="section-title">${title}</div>`;
+  Object.entries(groups).forEach(([sub, arr]) => {
+    if (sub) html += `<div class="subsection-title">${sub}</div>`;
+    html += '<div class="menu-grid">';
+    arr.forEach(i => {
+      const ph = i.photo
+        ? `<img src="${esc(i.photo)}" alt="${esc(i.name)}" loading="lazy">`
+        : `<div class="no-photo"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>`;
+      html += `<div class="menu-card-photo"
+        data-name="${escA(i.name)}" data-weight="${escA(i.weight||'')}"
+        data-price="${i.price}" data-photo="${escA(i.photo||'')}" data-desc="${escA(i.desc||'')}">
+        <div class="photo-slot">${ph}</div>
+        <div class="card-body">
+          <div class="item-info">
+            <div class="item-name">${esc(i.name)}</div>
+            ${i.weight ? `<div class="item-weight">${esc(i.weight)}</div>` : ''}
+          </div>
+          <div class="item-price">${i.price} ₴</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  return html;
+}
+
+function buildTextGridCategory(title, items) {
+  const groups = {};
+  items.forEach(i => { const s = i.subcat||''; if(!groups[s]) groups[s]=[]; groups[s].push(i); });
+  let html = `<div class="section-title">${title}</div>`;
+  Object.entries(groups).forEach(([sub, arr]) => {
+    if (sub) html += `<div class="subsection-title">${sub}</div>`;
+    html += '<div class="menu-grid">';
+    arr.forEach(i => {
+      const clickable = (i.desc || i.photo) ? 'style="cursor:pointer"' : '';
+      html += `<div class="menu-card" ${clickable}
+        data-name="${escA(i.name)}" data-weight="${escA(i.weight||'')}"
+        data-price="${i.price}" data-photo="${escA(i.photo||'')}" data-desc="${escA(i.desc||'')}">
+        <div class="item-info">
+          <div class="item-name">${esc(i.name)}</div>
+          ${i.desc ? `<div class="item-desc">${esc(i.desc)}</div>` : ''}
+          ${i.weight ? `<div class="item-weight" style="font-size:11px;color:#888;margin-top:2px">${esc(i.weight)}</div>` : ''}
+        </div>
+        <div class="item-price">${i.price} ₴</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  return html;
+}
+
+function buildListCategory(title, items) {
+  const groups = {};
+  items.forEach(i => { const s = i.subcat||''; if(!groups[s]) groups[s]=[]; groups[s].push(i); });
+  let html = `<div class="section-title">${title}</div>`;
+  Object.entries(groups).forEach(([sub, arr]) => {
+    if (sub) html += `<div class="subsection-title">${sub}</div>`;
+    html += '<div class="menu-list">';
+    arr.forEach(i => {
+      html += `<div class="menu-item">
+        <div class="item-info">
+          <div class="item-name">${esc(i.name)}</div>
+          ${i.desc ? `<div class="item-desc">${esc(i.desc)}</div>` : ''}
+          ${i.weight ? `<div class="item-desc">${esc(i.weight)}</div>` : ''}
+        </div>
+        <div class="item-price">${i.price} ₴</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  return html;
+}
+
+function showTab(tabName, btn) {
+  activeTab = tabName;
+  document.querySelectorAll('.category-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const sec = document.getElementById('tab-' + tabName);
+  if (sec) sec.classList.add('active');
+  if (btn) {
+    btn.classList.add('active');
+    // Центруємо активний таб у рядку (для мобільного скролу)
+    const tabs = document.getElementById('tabsScroll');
+    if (tabs && tabs.scrollWidth > tabs.clientWidth) {
+      const left = btn.offsetLeft - (tabs.clientWidth - btn.clientWidth) / 2;
+      tabs.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    }
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function openModal(card, name, weight, price, photo, desc) {
+  const modal = document.getElementById('item-modal');
+  const imgWrap = document.getElementById('modal-img-wrap');
+  const modalImg = document.getElementById('modal-image');
+
+  imgWrap.classList.remove('zoomed');
+  modalImg.style.transform = 'scale(1)';
+
+  let imgSrc = photo || (card && card.querySelector('img') ? card.querySelector('img').src : '');
+  if (imgSrc) {
+    modalImg.src = imgSrc;
+    imgWrap.style.display = 'flex';
+  } else {
+    imgWrap.style.display = 'none';
+  }
+
+  modal.querySelector('.modal-name').textContent = name;
+  modal.querySelector('.modal-weight').textContent = weight || '';
+  modal.querySelector('.modal-price').textContent = price + ' ₴';
+  modal.querySelector('.modal-desc').innerHTML = desc || (card && card.dataset.desc) || '';
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('item-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+function esc(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escA(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+loadMenu();
+</script>
+
+<script>
+/* ── Tabs-nav arrow: показується тільки коли є горизонтальний скрол ── */
+(function() {
+  const tabs = document.getElementById('tabsScroll');
+  const nav  = document.getElementById('tabs-nav-arrow');
+  if (!tabs || !nav) return;
+
+  function update() {
+    const overflowing = tabs.scrollWidth > tabs.clientWidth + 4;
+    if (!overflowing) {
+      nav.style.opacity = '0';
+      nav.style.pointerEvents = 'none';
+      return;
+    }
+    const atEnd = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 10;
+    nav.style.opacity = atEnd ? '0' : '1';
+  }
+
+  tabs.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update, { passive: true });
+  window.addEventListener('load', update);
+  update();
+  setTimeout(update, 200);
+})();
+
+/* ── Smoke canvas ── */
+(function() {
+  const canvas = document.getElementById('smoke-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  class Particle {
+    constructor(init) { this.reset(init); }
+    reset(init) {
+      this.x = W * 0.05 + Math.random() * W * 0.9;
+      this.y = init ? H * (0.7 + Math.random() * 0.45) : H + 20 + Math.random() * 60;
+      this.radius = 50 + Math.random() * 110;
+      this.alpha = 0;
+      this.targetAlpha = 0.045 + Math.random() * 0.085;
+      this.vx = (Math.random() - 0.5) * 0.28;
+      this.vy = -(0.28 + Math.random() * 0.42);
+      this.life = 0;
+      this.maxLife = 320 + Math.random() * 220;
+      this.startPhase = Math.random() * Math.PI * 2;
+      const warm = Math.random() < 0.25;
+      this.r = warm ? 255 : 205 + Math.floor(Math.random() * 50);
+      this.g = warm ? 218 : 205 + Math.floor(Math.random() * 50);
+      this.b = warm ? 120 : 205 + Math.floor(Math.random() * 50);
+    }
+    update() {
+      this.life++;
+      const p = this.life / this.maxLife;
+      if (p < 0.15)      this.alpha = (p / 0.15) * this.targetAlpha;
+      else if (p > 0.65) this.alpha = ((1 - p) / 0.35) * this.targetAlpha;
+      else               this.alpha = this.targetAlpha;
+      this.x += this.vx + Math.sin(this.life * 0.016 + this.startPhase) * 0.3;
+      this.y += this.vy;
+      this.radius += 0.22;
+      if (this.life >= this.maxLife) this.reset(false);
+    }
+    draw() {
+      const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+      g.addColorStop(0,   `rgba(${this.r},${this.g},${this.b},${this.alpha})`);
+      g.addColorStop(0.4, `rgba(${this.r},${this.g},${this.b},${this.alpha * 0.55})`);
+      g.addColorStop(1,   `rgba(${this.r},${this.g},${this.b},0)`);
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 55; i++) {
+    const p = new Particle(true);
+    p.life = Math.floor(Math.random() * p.maxLife);
+    particles.push(p);
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* ── Zoom & Pan у модальному фото ── */
+(function() {
+  const wrap = document.getElementById('modal-img-wrap');
+  const img  = document.getElementById('modal-image');
+  if (!wrap || !img) return;
+
+  let isZoomed = false, isDragging = false;
+  let startX = 0, startY = 0, translateX = 0, translateY = 0, moved = false;
+  const SCALE = 1.8, THRESHOLD = 6;
+
+  wrap.style.touchAction = 'none';
+
+  function limits() {
+    const r = wrap.getBoundingClientRect();
+    return { x: (r.width * (SCALE - 1)) / 2, y: (r.height * (SCALE - 1)) / 2 };
+  }
+  function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
+  function applyTransform() {
+    img.style.transform = isZoomed ? `scale(${SCALE}) translate(${translateX}px,${translateY}px)` : 'scale(1)';
+  }
+  function reset() {
+    isZoomed = false; translateX = 0; translateY = 0;
+    wrap.classList.remove('zoomed'); applyTransform();
+  }
+
+  wrap.addEventListener('click', e => {
+    if (moved) { moved = false; return; }
+    if (isZoomed) { reset(); }
+    else { isZoomed = true; wrap.classList.add('zoomed'); applyTransform(); }
+  });
+  wrap.addEventListener('pointerdown', e => {
+    if (!isZoomed) return;
+    isDragging = true; startX = e.clientX; startY = e.clientY; moved = false;
+    wrap.setPointerCapture(e.pointerId);
+  });
+  wrap.addEventListener('pointermove', e => {
+    if (!isZoomed || !isDragging) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    if (Math.abs(dx) > THRESHOLD || Math.abs(dy) > THRESHOLD) moved = true;
+    startX = e.clientX; startY = e.clientY;
+    const lim = limits();
+    translateX = clamp(translateX + dx, -lim.x, lim.x);
+    translateY = clamp(translateY + dy, -lim.y, lim.y);
+    applyTransform(); e.preventDefault();
+  });
+  wrap.addEventListener('pointerup',     () => { isDragging = false; });
+  wrap.addEventListener('pointercancel', () => { isDragging = false; });
+})();
+</script>
+</body>
+</html>
