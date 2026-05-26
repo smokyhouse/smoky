@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Smoky House — Адмін Панель</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="admin-body">
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">SMOKY<span>HOUSE</span></div>
+    <div class="login-sub">Панель адміністратора</div>
+    <div class="field"><label>Логін</label><input type="text" id="login-user" placeholder="admin" autocomplete="username"></div>
+    <div class="field"><label>Пароль</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-primary" style="width:100%" onclick="doLogin()">Увійти</button>
+    <div id="login-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;flex-direction:column;height:100dvh">
+  <div class="topbar">
+    <div class="topbar-logo">SMOKY<span>HOUSE</span></div>
+    <div class="topbar-right">
+      <span class="topbar-page" id="page-label">Меню</span>
+      <button class="btn-logout" onclick="doLogout()">Вийти</button>
+    </div>
+  </div>
+
+  <!-- Mobile bottom nav -->
+  <nav class="mob-nav">
+    <div class="mob-nav-inner">
+      <button class="mob-nav-btn active" onclick="goPageMob('menu',this)"><i class="ti ti-tools-kitchen-2"></i>Меню</button>
+      <button class="mob-nav-btn" onclick="goPageMob('photos',this)"><i class="ti ti-photo"></i>Фото</button>
+      <button class="mob-nav-btn" onclick="goPageMob('settings',this)"><i class="ti ti-settings"></i>Налашт.</button>
+      <button class="mob-nav-btn" onclick="goPageMob('config',this)"><i class="ti ti-plug"></i>Sheets</button>
+    </div>
+  </nav>
+  <button class="mob-fab" onclick="openAddModal()"><i class="ti ti-plus"></i></button>
+
+  <div class="body-wrap">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-label">Управління</div>
+      <div class="nav-item active" data-page="menu" onclick="goPage(this)"><i class="ti ti-tools-kitchen-2"></i> Меню</div>
+      <div class="nav-item" data-page="photos" onclick="goPage(this)"><i class="ti ti-photo"></i> Фотографії</div>
+      <div class="nav-divider"></div>
+      <div class="sidebar-label">Система</div>
+      <div class="nav-item" data-page="settings" onclick="goPage(this)"><i class="ti ti-settings"></i> Налаштування</div>
+      <div class="nav-item" data-page="config" onclick="goPage(this)"><i class="ti ti-plug"></i> Google Sheets</div>
+    </nav>
+
+    <div class="main">
+
+      <!-- MENU PAGE -->
+      <div class="page active" id="page-menu">
+        <div class="section-header">
+          <div class="section-title">Позиції меню</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-add" style="background:rgba(255,255,255,.07);color:var(--text-dim);border:.5px solid var(--border)" onclick="resetToDefault()"><i class="ti ti-refresh"></i> Скинути меню</button>
+            <button class="btn-add" onclick="openAddModal()"><i class="ti ti-plus"></i> Додати</button>
+          </div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-val" id="stat-total">0</div><div class="stat-label">Всього</div></div>
+          <div class="stat-card"><div class="stat-val stat-accent" id="stat-vis">0</div><div class="stat-label">Активних</div></div>
+          <div class="stat-card"><div class="stat-val" id="stat-cats">8</div><div class="stat-label">Категорій</div></div>
+          <div class="stat-card"><div class="stat-val stat-success" id="stat-photos">0</div><div class="stat-label">З фото</div></div>
+        </div>
+        <div class="search-wrap"><i class="ti ti-search"></i><input class="search-input" type="search" id="search" placeholder="Пошук за назвою..." oninput="renderMenu()"></div>
+        <div class="filter-row" id="filter-row">
+          <div class="chip active" data-cat="all" onclick="filterCat(this)">Всі</div>
+          <div class="chip" data-cat="food" onclick="filterCat(this)">🍽 Їжа</div>
+          <div class="chip" data-cat="sushi" onclick="filterCat(this)">🍣 Суші</div>
+          <div class="chip" data-cat="drinks" onclick="filterCat(this)">☕ Напої</div>
+          <div class="chip" data-cat="lemon" onclick="filterCat(this)">🍋 Лимонади</div>
+          <div class="chip" data-cat="tea" onclick="filterCat(this)">🫖 Чаї</div>
+          <div class="chip" data-cat="bar" onclick="filterCat(this)">🥃 Бар</div>
+          <div class="chip" data-cat="cocktails" onclick="filterCat(this)">🍹 Коктейлі</div>
+          <div class="chip" data-cat="hook" onclick="filterCat(this)">💨 Кальян</div>
+        </div>
+        <!-- Desktop table -->
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th style="width:40%">Позиція</th><th>Категорія</th><th>Вага</th><th>Ціна</th><th>Видно</th><th></th>
+          </tr></thead><tbody id="menu-tbody"></tbody></table>
+        </div>
+        <!-- Mobile list -->
+        <div class="mob-list" id="mob-list"></div>
+      </div>
+
+      <!-- PHOTOS PAGE -->
+      <div class="page" id="page-photos">
+        <div class="section-header"><div class="section-title">Фотографії</div></div>
+        <p style="font-size:12px;color:var(--text-dim);margin-bottom:14px">Тут відображаються назви та локальні шляхи фото. Виберіть файл на ПК, щоб змінити назву в базі.</p>
+        <div class="photos-grid" id="photos-grid"></div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div class="page" id="page-settings">
+        <div class="section-header">
+          <div class="section-title">Налаштування</div>
+          <button class="btn-add" onclick="saveSettings()"><i class="ti ti-device-floppy"></i> Зберегти</button>
+        </div>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <div class="settings-card-title">Контакти</div>
+            <div class="field"><label>Телефон</label><input type="text" id="s-phone"></div>
+            <div class="field"><label>Адреса</label><input type="text" id="s-address"></div>
+            <div class="field"><label>Instagram URL</label><input type="text" id="s-instagram"></div>
+          </div>
+          <div class="settings-card">
+            <div class="settings-card-title">Загальна інформація</div>
+            <div class="field"><label>Назва закладу</label><input type="text" id="s-name"></div>
+            <div class="field"><label>Слоган</label><input type="text" id="s-slogan"></div>
+            <div class="field"><label>Текст «Про нас»</label><textarea id="s-about"></textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIG PAGE -->
+      <div class="page" id="page-config">
+        <div class="section-header"><div class="section-title">Підключення Google Sheets</div></div>
+        <div class="config-card">
+          <div class="config-card-title">Автоматично задіяний веб-інтерфейс</div>
+          <div class="config-desc">Система підключена за замовчуванням до вашого Apps Script та до вашої таблиці. Ви можете змінити URL-адресу нижче у разі перевипуску розгортання.</div>
+        </div>
+        <div class="config-card">
+          <div class="config-card-title">URL-адреса Веб-застосунку</div>
+          <div class="url-input-wrap">
+            <input class="field input" type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/.../exec" style="background:#09090e;border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:#fff;font-size:12px;outline:none;width:100%">
+            <button class="btn-save-url" onclick="saveScriptUrl()">Зберегти</button>
+          </div>
+          <div class="status-row" id="conn-status"><span class="status-dot dot-wait"></span>Не підключено</div>
+        </div>
+        <div class="config-card">
+          <div class="config-card-title">Синхронізація таблиці</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-add" onclick="pushToSheets()"><i class="ti ti-upload"></i> Зберегти в Sheets</button>
+            <button class="btn-add" style="background:rgba(255,255,255,.08);color:var(--text)" onclick="pullFromSheets()"><i class="ti ti-download"></i> Завантажити з Sheets</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /body-wrap -->
+</div><!-- /app -->
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Нова позиція</div>
+      <button class="modal-x" onclick="closeModal()">×</button>
+    </div>
+    <div class="field"><label>Назва *</label><input type="text" id="m-name" placeholder="Назва страви або напою"></div>
+    <div class="field-row">
+      <div class="field" style="margin:0"><label>Категорія *</label>
+        <select id="m-cat" onchange="onCatChange()">
+          <option value="food">🍽 Їжа</option>
+          <option value="sushi">🍣 Суші та роли</option>
+          <option value="drinks">☕ Напої</option>
+          <option value="lemon">🍋 Лимонади</option>
+          <option value="tea">🫖 Чаї</option>
+          <option value="bar">🥃 Бар</option>
+          <option value="cocktails">🍹 Коктейлі</option>
+          <option value="hook">💨 Кальян</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0" id="subcat-wrap"><label>Підкатегорія</label><input type="text" id="m-subcat" placeholder="напр. Салати"></div>
+    </div>
+    <div class="field-row" style="margin-top:14px">
+      <div class="field" style="margin:0"><label>Ціна (₴) *</label><input type="number" id="m-price" placeholder="0" min="0"></div>
+      <div class="field" style="margin:0"><label>Вага / об'єм</label><input type="text" id="m-weight" placeholder="напр. 250 г"></div>
+    </div>
+    <div class="field" style="margin-top:14px"><label>Опис / склад</label><textarea id="m-desc" placeholder="Інгредієнти, склад..."></textarea></div>
+    <div class="field"><label>Вибрати фото з папки вашого хостингу</label>
+      <div class="upload-area">
+        <input type="file" accept="image/*" onchange="handlePhotoUpload(event)">
+        <i class="ti ti-photo-up"></i>
+        <span>Виберіть файл (в базу запишеться шлях: img/назва_файлу.webp)</span>
+      </div>
+      <img class="upload-preview" id="photo-preview">
+    </div>
+    <div class="field" style="display:flex;align-items:center;gap:10px">
+      <div class="vis-toggle on" id="m-vis-toggle" onclick="toggleModalVis()"></div>
+      <span style="font-size:12px;color:var(--text-dim)" id="m-vis-label">Видимо в меню</span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Скасувати</button>
+      <button class="btn-save" onclick="saveItem()">Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon"><i class="ti ti-trash"></i></div>
+    <div class="confirm-text">Видалити позицію?</div>
+    <div class="confirm-sub" id="confirm-name"></div>
+    <div class="confirm-btns">
+      <button class="btn-ccancel" onclick="closeConfirm()">Скасувати</button>
+      <button class="btn-cdel" onclick="doDelete()">Видалити</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVING -->
+<div class="saving" id="saving"><div class="saving-box"><div class="saving-spin"></div><div class="saving-text" id="saving-text">Зберігаємо...</div></div></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="ti ti-check"></i><span id="toast-msg"></span></div>
+
+<script>
+// Автозаповнення за замовчуванням при першому запуску
+const DEFAULT_MENU = [
+  {id:'f1',name:'Шоколадні млинці з вишнею',cat:'food',subcat:'Сніданки',weight:'215 г',price:120,desc:'',photo:'img/Shokoladni mlyntsi.webp',vis:true},
+  {id:'f2',name:'Сирники',cat:'food',subcat:'Сніданки',weight:'230/30 г',price:185,desc:'',photo:'img/Sirniki.webp',vis:true},
+  {id:'f4',name:'Салат літній',cat:'food',subcat:'Салати',weight:'180 г',price:180,desc:'',photo:'img/Salat lіtniy.webp',vis:true},
+  {id:'s1',name:'Філадельфія-лосось рол',cat:'sushi',subcat:'',weight:'270 г',price:360,desc:'',photo:'img/Filadelʹfiya-losos.webp',vis:true},
+  {id:'h1',name:'Кальян класік',cat:'hook',subcat:'',weight:'в асортименті',price:380,desc:'Широкий вибір тютюну та безнікотинових сумішей',photo:'',vis:true}
+];
+
+const CAT_NAMES = {food:'Їжа',sushi:'Суші та роли',drinks:'Напої',lemon:'Лимонади',tea:'Чаї',bar:'Бар',cocktails:'Коктейлі',hook:'Кальян'};
+const DEFAULT_SETTINGS = {phone:'+38(077) 777-19-25',address:'Харків, вул. Гвардійців-Широнінців, 51/1',instagram:'https://www.instagram.com/Smoky.House_kh',name:'Smoky House',slogan:'Твій оазис диму та релаксу в серці міста',about:'Ми — не просто кальянна.'};
+
+let ITEMS = [];
+let SETTINGS = {};
+let SCRIPT_URL = '';
+let ADMIN_PASSWORD_HASH = '';
+let filterCurrent = 'all';
+let editId = null;
+let deleteId = null;
+let modalVis = true;
+let pendingPhoto = '';
+
+// Auth
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  if (u==='admin' && p==='smokyhouse2026') {
+    ADMIN_PASSWORD_HASH = p;
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    init();
+  } else {
+    document.getElementById('login-err').textContent='Невірний логін або пароль';
+  }
+}
+
+function doLogout() {
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-pass').value='';
+  ADMIN_PASSWORD_HASH = '';
+}
+
+// Init
+function init() {
+  SCRIPT_URL = localStorage.getItem('sh_script_url') || 'https://script.google.com/macros/s/AKfycbxdwv4JlTUph-APvm7VUj0mCO86vWLgAcJofcJi-IbV59QqEczVaPlM0v6Y77dUNSTakA/exec';
+  try {
+    const saved = localStorage.getItem('sh_items');
+    const parsed = saved ? JSON.parse(saved) : null;
+    if (!parsed || parsed.length < 3) {
+      ITEMS = JSON.parse(JSON.stringify(DEFAULT_MENU));
+      localStorage.setItem('sh_items', JSON.stringify(ITEMS));
+    } else {
+      ITEMS = parsed;
+    }
+  } catch(e) {
+    ITEMS = JSON.parse(JSON.stringify(DEFAULT_MENU));
+  }
+  try {
+    const saved = localStorage.getItem('sh_settings');
+    SETTINGS = saved ? JSON.parse(saved) : Object.assign({}, DEFAULT_SETTINGS);
+  } catch(e) {
+    SETTINGS = Object.assign({}, DEFAULT_SETTINGS);
+  }
+  
+  if (SCRIPT_URL) {
+    document.getElementById('script-url-input').value = SCRIPT_URL;
+    updateConnStatus('wait', 'Перевірка з\'єднання...');
+    pullFromSheets(true);
+  }
+  renderMenu();
+  renderPhotos();
+  loadSettingsForm();
+}
+
+function resetToDefault() {
+  if (!confirm('Скинути меню до стандартного?')) return;
+  ITEMS = JSON.parse(JSON.stringify(DEFAULT_MENU));
+  saveLocal();
+  renderMenu(); renderPhotos();
+  showToast('Локальне меню скинуто ✓');
+  if (SCRIPT_URL) saveToSheets();
+}
+
+function saveLocal() {
+  localStorage.setItem('sh_items', JSON.stringify(ITEMS));
+  localStorage.setItem('sh_settings', JSON.stringify(SETTINGS));
+}
+
+// Navigation
+function goPage(el) {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  switchPage(el.dataset.page);
+}
+function goPageMob(page, btn) {
+  document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===page));
+  switchPage(page);
+  document.querySelector('.mob-fab').style.display = page==='menu'?'flex':'none';
+}
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  const labels={menu:'Меню',photos:'Фотографії',settings:'Налаштування',config:'Google Sheets'};
+  document.getElementById('page-label').textContent = labels[page]||'';
+  if (page==='photos') renderPhotos();
+}
+
+// Render Menu
+function renderMenu() {
+  const q = (document.getElementById('search').value||'').toLowerCase();
+  const rows = ITEMS.filter(i => {
+    const mc = filterCurrent==='all' || i.cat===filterCurrent;
+    const mq = !q || i.name.toLowerCase().includes(q) || (i.subcat||'').toLowerCase().includes(q);
+    return mc && mq;
+  });
+
+  const tbody = document.getElementById('menu-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:36px;color:var(--text-muted);font-size:13px">Нічого не знайдено</td></tr>`;
+  } else {
+    tbody.innerHTML = rows.map(item => {
+      const th = item.photo
+        ? `<div class="thumb"><img src="${h(item.photo)}" alt=""></div>`
+        : `<div class="thumb"><i class="ti ti-tools-kitchen-2"></i></div>`;
+      return `<tr>
+        <td><div class="dish-cell">${th}<div>
+          <div class="dish-name">${h(item.name)}</div>
+          ${item.subcat?`<div class="dish-sub">${h(item.subcat)}</div>`:''}
+        </div></div></td>
+        <td><span class="cat-badge cat-${item.cat}">${CAT_NAMES[item.cat]||item.cat}</span></td>
+        <td style="color:var(--text-dim);font-size:12px">${h(item.weight||'—')}</td>
+        <td><span class="price">${item.price} ₴</span></td>
+        <td><div class="vis-toggle ${item.vis?'on':''}" onclick="toggleVis('${item.id}')"></div></td>
+        <td><div class="action-btns">
+          <button class="btn-icon" onclick="openEditModal('${item.id}')"><i class="ti ti-edit"></i></button>
+          <button class="btn-icon del" onclick="askDelete('${item.id}')"><i class="ti ti-trash"></i></button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  const mob = document.getElementById('mob-list');
+  if (!rows.length) {
+    mob.innerHTML = `<div style="text-align:center;padding:36px;color:var(--text-muted);font-size:13px">Нічого не знайдено</div>`;
+  } else {
+    mob.innerHTML = rows.map(item => {
+      const th = item.photo ? `<img src="${h(item.photo)}" alt="">` : `<i class="ti ti-tools-kitchen-2"></i>`;
+      return `<div class="mob-card">
+        <div class="mob-thumb" onclick="openEditModal('${item.id}')">${th}</div>
+        <div class="mob-body" onclick="openEditModal('${item.id}')">
+          <div class="mob-name">${h(item.name)}</div>
+          <div class="mob-meta">
+            <span class="cat-badge cat-${item.cat}" style="font-size:9px;padding:1px 6px">${CAT_NAMES[item.cat]||''}</span>
+            ${item.subcat?`<span>${h(item.subcat)}</span>`:''}
+          </div>
+        </div>
+        <div class="mob-price">${item.price}₴</div>
+        <div class="vis-toggle ${item.vis?'on':''}" onclick="toggleVis('${item.id}')"></div>
+      </div>`;
+    }).join('');
+  }
+  renderStats();
+}
+
+function renderStats() {
+  document.getElementById('stat-total').textContent = ITEMS.length;
+  document.getElementById('stat-vis').textContent = ITEMS.filter(i=>i.vis).length;
+  document.getElementById('stat-photos').textContent = ITEMS.filter(i=>i.photo).length;
+}
+
+function filterCat(el) {
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  filterCurrent = el.dataset.cat;
+  renderMenu();
+}
+
+function toggleVis(id) {
+  const item = ITEMS.find(i=>i.id===id);
+  if (!item) return;
+  item.vis = !item.vis;
+  saveLocal();
+  renderMenu();
+  if (SCRIPT_URL) saveToSheets();
+}
+
+function openAddModal() {
+  editId = null;
+  pendingPhoto = '';
+  document.getElementById('modal-title').textContent = 'Нова позиція';
+  document.getElementById('m-name').value = '';
+  document.getElementById('m-cat').value = 'food';
+  document.getElementById('m-subcat').value = '';
+  document.getElementById('m-price').value = '';
+  document.getElementById('m-weight').value = '';
+  document.getElementById('m-desc').value = '';
+  document.getElementById('photo-preview').style.display = 'none';
+  modalVis = true;
+  updateModalVisUI();
+  onCatChange();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openEditModal(id) {
+  const item = ITEMS.find(i=>i.id===id);
+  if (!item) return;
+  editId = id;
+  pendingPhoto = item.photo || '';
+  document.getElementById('modal-title').textContent = 'Редагувати позицію';
+  document.getElementById('m-name').value = item.name;
+  document.getElementById('m-cat').value = item.cat;
+  document.getElementById('m-subcat').value = item.subcat || '';
+  document.getElementById('m-price').value = item.price;
+  document.getElementById('m-weight').value = item.weight || '';
+  document.getElementById('m-desc').value = item.desc || '';
+  const prev = document.getElementById('photo-preview');
+  if (item.photo) { prev.src = item.photo; prev.style.display = 'block'; }
+  else { prev.style.display = 'none'; }
+  modalVis = item.vis !== false;
+  updateModalVisUI();
+  onCatChange();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  editId = null;
+}
+
+function onCatChange() {
+  const cat = document.getElementById('m-cat').value;
+  document.getElementById('subcat-wrap').style.display = ['food','drinks','sushi','tea','bar'].includes(cat) ? 'block' : 'none';
+}
+
+function toggleModalVis() {
+  modalVis = !modalVis;
+  updateModalVisUI();
+}
+function updateModalVisUI() {
+  const t = document.getElementById('m-vis-toggle');
+  const l = document.getElementById('m-vis-label');
+  t.classList.toggle('on', modalVis);
+  l.textContent = modalVis ? 'Видимо в меню' : 'Приховано';
+}
+
+// Запис виключно назви файлу для локальної папки img/
+function handlePhotoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  pendingPhoto = 'img/' + file.name;
+  const prev = document.getElementById('photo-preview');
+  prev.src = URL.createObjectURL(file);
+  prev.style.display = 'block';
+}
+
+function saveItem() {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) { showToast('Введіть назву позиції', true); return; }
+  const price = parseInt(document.getElementById('m-price').value) || 0;
+  const cat = document.getElementById('m-cat').value;
+  const subcat = document.getElementById('m-subcat').value.trim();
+  const weight = document.getElementById('m-weight').value.trim();
+  const desc = document.getElementById('m-desc').value.trim();
+
+  if (editId) {
+    const item = ITEMS.find(i=>i.id===editId);
+    if (item) { item.name=name; item.cat=cat; item.subcat=subcat; item.weight=weight; item.price=price; item.desc=desc; item.photo=pendingPhoto; item.vis=modalVis; }
+  } else {
+    ITEMS.push({id:'x'+Date.now(), name, cat, subcat, weight, price, desc, photo:pendingPhoto, vis:modalVis});
+  }
+  saveLocal();
+  renderMenu();
+  renderPhotos();
+  closeModal();
+  showToast(editId ? 'Збережено ✓' : 'Додано ✓');
+  if (SCRIPT_URL) saveToSheets();
+}
+
+function askDelete(id) {
+  deleteId = id;
+  const item = ITEMS.find(i=>i.id===id);
+  document.getElementById('confirm-name').textContent = item ? item.name : '';
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('open'); deleteId=null; }
+function doDelete() {
+  if (!deleteId) return;
+  ITEMS = ITEMS.filter(i=>i.id!==deleteId);
+  saveLocal(); renderMenu(); renderPhotos(); closeConfirm();
+  showToast('Видалено');
+  if (SCRIPT_URL) saveToSheets();
+}
+
+function renderPhotos() {
+  const grid = document.getElementById('photos-grid');
+  const withPhoto = ITEMS.filter(i=>i.photo);
+  if (!withPhoto.length) { grid.innerHTML='<p style="color:var(--text-muted);font-size:13px">Немає позицій з фото</p>'; return; }
+  grid.innerHTML = withPhoto.map(item => `
+    <div class="photo-card">
+      <div class="photo-card-img"><img src="${h(item.photo)}" alt="${h(item.name)}"></div>
+      <div class="photo-card-info">
+        <div class="photo-card-name">${h(item.name)}</div>
+        <div class="photo-card-sub">${h(item.photo)}</div>
+        <div class="photo-card-actions">
+          <button class="btn-icon" onclick="replacePhoto('${item.id}')" title="Замінити"><i class="ti ti-photo-up"></i></button>
+          <button class="btn-icon del" onclick="removePhoto('${item.id}')" title="Видалити фото"><i class="ti ti-photo-x"></i></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function replacePhoto(id) {
+  const inp = document.createElement('input');
+  inp.type='file'; inp.accept='image/*';
+  inp.onchange = e => {
+    const file = e.target.files[0]; if(!file) return;
+    const item = ITEMS.find(i=>i.id===id);
+    if (item) { 
+      item.photo = 'img/' + file.name; 
+      saveLocal(); renderPhotos(); renderMenu(); 
+      showToast('Шлях замінено на img/' + file.name + ' ✓'); 
+      if(SCRIPT_URL) saveToSheets(); 
+    }
+  };
+  inp.click();
+}
+function removePhoto(id) {
+  const item = ITEMS.find(i=>i.id===id);
+  if (item) { item.photo=''; saveLocal(); renderPhotos(); renderMenu(); showToast('Фото видалено'); if(SCRIPT_URL) saveToSheets(); }
+}
+
+function loadSettingsForm() {
+  document.getElementById('s-phone').value = SETTINGS.phone||'';
+  document.getElementById('s-address').value = SETTINGS.address||'';
+  document.getElementById('s-instagram').value = SETTINGS.instagram||'';
+  document.getElementById('s-name').value = SETTINGS.name||'';
+  document.getElementById('s-slogan').value = SETTINGS.slogan||'';
+  document.getElementById('s-about').value = SETTINGS.about||'';
+}
+function saveSettings() {
+  SETTINGS.phone = document.getElementById('s-phone').value;
+  SETTINGS.address = document.getElementById('s-address').value;
+  SETTINGS.instagram = document.getElementById('s-instagram').value;
+  SETTINGS.name = document.getElementById('s-name').value;
+  SETTINGS.slogan = document.getElementById('s-slogan').value;
+  SETTINGS.about = document.getElementById('s-about').value;
+  saveLocal();
+  showToast('Налаштування збережено ✓');
+  if (SCRIPT_URL) saveSettingsToSheets();
+}
+
+async function apiCall(body) {
+  body.password = ADMIN_PASSWORD_HASH;
+  const resp = await fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify(body), headers:{'Content-Type':'text/plain'}});
+  return await resp.json();
+}
+
+function saveScriptUrl() {
+  const url = document.getElementById('script-url-input').value.trim();
+  if (!url) return;
+  SCRIPT_URL = url;
+  localStorage.setItem('sh_script_url', url);
+  updateConnStatus('wait', 'Перевірка з\'єднання...');
+  pullFromSheets(true);
+}
+
+async function pullFromSheets(silent=false) {
+  if (!SCRIPT_URL) { showToast('Спочатку вкажіть URL веб-додатку', true); return; }
+  if (!silent) showSaving('Завантажуємо з Google Sheets...');
+  try {
+    const data = await apiCall({action:'getItems'});
+    if (!silent) hideSaving();
+    if (data && data.items && data.items.length) {
+      ITEMS = data.items.map(i=>({...i, vis:i.vis===true||i.vis==='TRUE'||i.vis==='true'||i.vis===1, price:parseInt(i.price)||0}));
+      saveLocal(); renderMenu(); renderPhotos();
+      updateConnStatus('ok', 'Підключено ✓');
+      if (!silent) showToast('Меню оновлено з Sheets ✓');
+    } else {
+      updateConnStatus('ok', 'Підключено (порожня таблиця)');
+    }
+  } catch(e) {
+    if (!silent) hideSaving();
+    updateConnStatus('err', 'Помилка з\'єднання');
+  }
+}
+
+async function saveToSheets() { if (SCRIPT_URL) apiCall({action:'saveItems', items:ITEMS}); }
+async function saveSettingsToSheets() { if (SCRIPT_URL) apiCall({action:'saveSettings', settings:SETTINGS}); }
+
+async function pushToSheets() {
+  if (!SCRIPT_URL) { showToast('Спочатку вкажіть URL', true); return; }
+  showSaving('Зберігаємо в Google Sheets...');
+  try {
+    const res = await apiCall({action:'saveItems', items:ITEMS});
+    hideSaving();
+    if (res && res.ok) showToast('Дані збережено в Sheets ✓');
+    else showToast('Помилка запису', true);
+  } catch(e) { hideSaving(); showToast('Помилка з\'єднання', true); }
+}
+
+function updateConnStatus(type, text) {
+  const el = document.getElementById('conn-status');
+  const cls = type==='ok'?'dot-ok':type==='err'?'dot-err':'dot-wait';
+  el.innerHTML = `<span class="status-dot ${cls}"></span>${text}`;
+}
+
+function showSaving(text) {
+  document.getElementById('saving-text').textContent = text;
+  document.getElementById('saving').classList.add('open');
+}
+function hideSaving() { document.getElementById('saving').classList.remove('open'); }
+
+function showToast(msg, err=false) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.toggle('err', err);
+  t.querySelector('i').className = err ? 'ti ti-alert-circle' : 'ti ti-check';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+function h(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+document.getElementById('modal-overlay').addEventListener('click', e=>{if(e.target===document.getElementById('modal-overlay'))closeModal();});
+document.getElementById('confirm-overlay').addEventListener('click', e=>{if(e.target===document.getElementById('confirm-overlay'))closeConfirm();});
+document.addEventListener('keydown', e=>{if(e.key==='Escape'){closeModal();closeConfirm();}});
+</script>
+</body>
+</html>
