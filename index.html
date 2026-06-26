@@ -3,15 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Smoky House — Внутрішнє меню</title>
-  <meta name="description" content="Smoky House — внутрішня версія меню. Повний асортимент: їжа, суші, напої, бар, коктейлі, кальяни.">
-  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
-  <meta name="googlebot" content="noindex, nofollow">
+  <title>Smoky House — кальянна та бар у Харкові | Суші, коктейлі, кухня</title>
+  <meta name="description" content="Smoky House — кальянна та lounge bar у Харкові на Салтівці. Смачні суші, роли, бургери, коктейлі, кальяни та атмосфера для відпочинку. Забронюйте стіл за номером +38(077) 777-19-25.">
+  <meta name="keywords" content="Smoky House, кальянна Харків, кальянная Харьков, бар Салтовка, ресторан Салтовка, суші Харків, суши Харьков, роли Харків, роллы Харьков, коктейлі Харків, коктейли Харьков, смачна кухня, вкусная кухня, авторські коктейлі, lounge bar Kharkiv, кальяни Харків, кальяны Харьков, доставка суші, доставка суши, азіатська кухня, паназіатська кухня, бургери Харків, заклади Харкова, відпочинок Харків, релакс бар, бронювання столів, бронь столика, hookah Kharkiv, smoky house kharkiv, нічний бар Харків, лаунж бар Харків">
+  <meta property="og:title" content="Smoky House | Твій оазис диму">
+  <meta property="og:description" content="Відкрий для себе мистецтво кальяну на новому рівні.">
+  <meta property="og:image" content="https://smokyhouse.kh.ua/img/SMOKY%20HOUSE.png">
+  <meta property="og:url" content="https://smokyhouse.kh.ua">
+  <link rel="canonical" href="https://smokyhouse.kh.ua/">
   <link rel="icon" type="image/png" sizes="32x32" href="img/SMOKY.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 
-  <!-- Internal version — no structured data for search engines -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  "name": "Smoky House",
+  "description": "Кальянна та lounge bar у Харкові на Салтівці. Кальяни, суші, авторські коктейлі та напої.",
+  "url": "https://smokyhouse.kh.ua/",
+  "menu": "https://smokyhouse.kh.ua/menu.html",
+  "image": "https://smokyhouse.kh.ua/img/SMOKY%20HOUSE.png",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Kharkiv",
+    "addressRegion": "Kharkivska Oblast",
+    "addressCountry": "UA",
+    "streetAddress": "вул. Гвардійців-Широнінців, 51/1"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 50.010814076643925,
+    "longitude": 36.33854540121037
+  },
+  "telephone": "+380777771925",
+  "openingHours": "Mo-Su 12:00-03:00",
+  "servesCuisine": ["Японська", "Паназіатська", "Європейська"],
+  "priceRange": "$$",
+  "sameAs": ["https://www.instagram.com/Smoky.House_kh"]
+}
+</script>
 </head>
 <body>
 
@@ -20,8 +53,9 @@
 
 <!-- Header (оригінальний дизайн) -->
 <header>
-  <a href="index.html" class="logo-text">SMOKY<span>HOUSE</span></a>
+  <a href="/" class="logo-text">SMOKY<span>HOUSE</span></a>
   <nav>
+    <a href="#promos">Акції</a>
     <a href="#about">Про нас</a>
     <a href="#why-us">Переваги</a>
     <a href="#contact">Контакти</a>
@@ -31,10 +65,59 @@
 <!-- Hero -->
 <section class="hero">
   <h1 class="neon-title">SMOKY HOUSE</h1>
-  <p id="hero-slogan">Повне внутрішнє меню закладу — їжа, суші, напої, бар, коктейлі та кальяни. Smoky House, Харків, вул. Гвардійців-Широнінців, 51/1.</p>
+  <p id="hero-slogan">Твій оазис диму та релаксу в серці міста. lounge-простір у Харкові на Салтівці. Smoky House — кальянна, бар та місце для справжнього релаксу з авторськими напоями, смачною кухнею, суші та атмосферою, у яку хочеться повертатися знову...</p>
   <div class="hero-buttons">
     <a href="tel:+38(077)777-19-25" id="hero-phone-btn" class="btn btn-primary">Забронювати стіл</a>
     <a href="menu.html" class="btn btn-secondary">Переглянути меню</a>
+  </div>
+</section>
+
+<!-- Promotions -->
+<section id="promos" class="section reveal">
+  <h2>Наші <span>акції</span></h2>
+  <p class="promos-intro reveal" style="transition-delay:0.1s">Вигідні пропозиції щотижня — лови момент і відпочивай зі смаком.</p>
+  <div class="promos">
+
+    <!-- 1 — Суші по четвергах -->
+    <div class="promo-card reveal-left reveal-delay-1">
+      <span class="promo-badge">−30%</span>
+      <div class="promo-icon">🍣</div>
+      <h3>Суші по четвергах</h3>
+      <p>Щочетверга знижка <b>−30%</b> на всі суші та роли. Збери компанію та насолоджуйся улюбленими сетами вигідніше.</p>
+      <div class="promo-meta"><span class="icon">📅</span> Щочетверга</div>
+    </div>
+
+    <!-- 2 — Фруктовий кальян по неділях -->
+    <div class="promo-card reveal reveal-delay-2">
+      <span class="promo-badge">АКЦІЯ</span>
+      <div class="promo-icon">💨</div>
+      <h3>Фруктовий кальян щонеділі</h3>
+      <p>Спеціальна недільна ціна на фруктовий кальян — соковитий смак за приємніші гроші.</p>
+      <div class="promo-price">
+        <span class="price-old">550 грн</span>
+        <span class="price-new">400 грн</span>
+      </div>
+      <div class="promo-meta"><span class="icon">📅</span> Щонеділі</div>
+    </div>
+
+    <!-- 3 — Кухня у будні -->
+    <div class="promo-card reveal reveal-delay-2">
+      <span class="promo-badge">−20%</span>
+      <div class="promo-icon">🍽️</div>
+      <h3>Кухня у будні −20%</h3>
+      <p>Знижка <b>−20%</b> на всю кухню у будні дні. Ідеально для смачного денного перекусу чи бізнес-ланчу.</p>
+      <div class="promo-meta"><span class="icon">🕒</span> ПН–ПТ · 12:00–15:00</div>
+    </div>
+
+    <!-- 4 — Безлім на коктейлі -->
+    <div class="promo-card reveal-right reveal-delay-3">
+      <span class="promo-badge">БЕЗЛІМ</span>
+      <div class="promo-icon">🍸</div>
+      <h3>Безліміт на коктейлі</h3>
+      <p>Безлімітні авторські коктейлі усього за <b>1500 грн</b> з особи. Вечір без обмежень — лише задоволення.</p>
+      <div class="promo-meta"><span class="icon">🕒</span> ПТ–НД · 17:00–22:00</div>
+    </div>
+
   </div>
 </section>
 
