@@ -1964,6 +1964,8 @@ td { padding: 10px 14px; vertical-align: middle; }
   text-decoration: line-through;
   text-decoration-color: rgba(255,80,80,0.75);
   font-weight: 700;
+  position: absolute;
+  top: 280px; left: -1px; right: 3px;
 }
 .price-new {
   font-size: 30px;
