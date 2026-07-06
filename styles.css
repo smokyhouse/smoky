@@ -340,16 +340,16 @@ footer {
   perspective: 1000px;
 }
 .card {
-  background: linear-gradient(145deg, rgba(30,30,40,0.6), rgba(15,15,20,0.8));
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(30,30,40,0.6), rgba(15,15,20,0.85));
+  border: 1px solid rgba(255,230,0,0.12);
+  border-radius: 22px;
   padding: 48px 28px;
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   transition: transform 0.5s cubic-bezier(0.25,0.8,0.25,1), border-color 0.5s, box-shadow 0.5s;
   position: relative;
   transform-style: preserve-3d;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
   overflow: hidden;
   will-change: transform;
 }
@@ -375,7 +375,7 @@ footer {
 }
 .card:hover {
   transform: translateY(-14px) rotateX(4deg) rotateY(-4deg);
-  border-color: rgba(255,230,0,0.4);
+  border-color: rgba(255,230,0,0.45);
   box-shadow: 0 30px 60px rgba(0,0,0,0.7), 0 0 30px rgba(255,230,0,0.2);
 }
 .card-icon {
@@ -627,8 +627,11 @@ footer {
 .menu-card-photo {
   display: flex;
   align-items: stretch;
-  background: rgba(255,255,255,0.04);
-  border: 2px solid rgba(255,220,0,0.12);
+  background: linear-gradient(145deg, rgba(30,30,40,0.6), rgba(15,15,20,0.85));
+  border: 1px solid rgba(255,230,0,0.12);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
   border-radius: 10px;
   overflow: hidden;
   transition: border-color .35s cubic-bezier(0.2,0.9,0.2,1), transform .35s cubic-bezier(0.2,0.9,0.2,1), box-shadow .35s;
@@ -636,7 +639,7 @@ footer {
   cursor: pointer;
 }
 .menu-card-photo:hover {
-  border-color: rgba(255,220,0,0.45);
+  border-color: rgba(255,230,0,0.45);
   transform: translateY(-5px);
   box-shadow: 0 8px 36px rgba(255,220,0,0.12);
 }
@@ -726,16 +729,18 @@ footer {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,220,0,0.1);
+  background: linear-gradient(145deg, rgba(30,30,40,0.6), rgba(15,15,20,0.85));
+  border: 1px solid rgba(255,230,0,0.12);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
   border-radius: 12px;
   padding: 12px 16px;
   transition: border-color .2s, background .2s, transform .2s;
   min-height: 56px;
 }
 .menu-card:hover {
-  background: rgba(255,230,0,0.05);
-  border-color: rgba(255,230,0,0.3);
+  border-color: rgba(255,230,0,0.45);
   transform: translateX(3px);
 }
 .menu-card .item-info { flex: 1; min-width: 0; }
@@ -775,14 +780,16 @@ footer {
   align-items: flex-start;
   padding: 12px 18px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.04);
+  background: linear-gradient(145deg, rgba(30,30,40,0.6), rgba(15,15,20,0.85));
+  border: 1px solid rgba(255,230,0,0.12);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
   transition: all 0.2s ease;
   gap: 14px;
 }
 .menu-item:hover {
-  background: rgba(255,230,0,0.05);
-  border-color: rgba(255,230,0,0.15);
+  border-color: rgba(255,230,0,0.45);
   transform: translateX(3px);
 }
 .menu-item .item-info { flex: 1; }
@@ -835,14 +842,29 @@ footer {
 }
 .modal-close {
   position: absolute;
-  top: 16px; right: 20px;
-  font-size: 28px;
-  color: var(--gold);
+  top: 10px; right: 10px;
+  z-index: 40;
+  width: 42px; height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #fff;
+  background: rgba(8,8,12,0.62);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 50%;
   cursor: pointer;
   line-height: 1;
-  transition: color 0.3s ease;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.45);
+  transition: color 0.25s ease, background 0.25s ease, transform 0.15s ease;
 }
-.modal-close:hover { color: #fff; }
+.modal-close:hover { color: var(--gold); background: rgba(8,8,12,0.85); }
+.modal-close:active { transform: scale(0.9); }
+@media (max-width: 600px) {
+  .modal-close { top: 8px; right: 8px; width: 44px; height: 44px; }
+}
 .modal-img {
   width: 100%;
   max-height: 400px;
@@ -928,6 +950,11 @@ footer {
 
   /* Disable heavy 3D card tilt on mobile for perf */
   .card:hover { transform: translateY(-8px); }
+  /* Много карток у сітці — блюр на мобільному коштує дорого, а фон майже непрозорий */
+  .menu-card-photo, .menu-card, .menu-item {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
   /* Reduce shimmer animation on mobile */
   .card::after { display: none; }
   .hero::after { display: none; }
@@ -1995,3 +2022,86 @@ td { padding: 10px 14px; vertical-align: middle; }
   .promo-card::after { display: none; }
   .promos-intro { margin-top: -10px; }
 }
+
+/* ═══════════ v2: Адмінка — порядок позицій, статус синхронізації ═══════════ */
+.order-btns { display: flex; flex-direction: column; gap: 3px; margin-right: 4px; }
+.btn-ord {
+  width: 26px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: var(--text-dim, #9aa);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  padding: 0;
+}
+.btn-ord:hover { background: rgba(255,230,0,0.12); color: #ffe600; }
+.btn-ord:disabled { opacity: .25; cursor: default; }
+.mob-ord { display: flex; flex-direction: column; gap: 4px; margin-left: 6px; }
+.mob-ord .btn-ord { width: 30px; height: 24px; font-size: 12px; }
+
+.sync-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text-dim, #9aa);
+  white-space: nowrap;
+}
+.sync-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: #777; }
+.sync-badge.ok .dot { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,.6); }
+.sync-badge.saving .dot { background: #ffe600; animation: syncPulse 0.9s ease infinite; }
+.sync-badge.err .dot { background: #f07070; }
+@keyframes syncPulse { 50% { opacity: .35; } }
+
+.upload-progress { font-size: 11px; color: #ffe600; margin-top: 6px; display: none; }
+.upload-progress.show { display: block; }
+
+/* кнопка «Опублікувати»: крапка = є неопубліковані зміни */
+#btn-publish { position: relative; }
+#btn-publish.pub-dirty::after {
+  content: '';
+  position: absolute;
+  top: -3px; right: -3px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #ffe600;
+  box-shadow: 0 0 8px rgba(255,230,0,.8);
+  animation: syncPulse 1.2s ease infinite;
+}
+
+/* ═══════════ v2.2: Фонові фото під шаром диму ═══════════ */
+.smoke-bg .bg-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-position: center 30%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0.65;
+}
+.smoke-bg canvas { position: relative; z-index: 1; }
+
+/* віньєтка: краї та низ темніші — контент читається на будь-якій ділянці */
+.smoke-bg .bg-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 28%, rgba(5,5,8,0) 0%, rgba(5,5,8,0.5) 75%),
+    linear-gradient(180deg, rgba(5,5,8,0.5) 0%, rgba(5,5,8,0.3) 30%, rgba(5,5,8,0.85) 100%);
+}
+
+.bg-lounge   { background-image: url('img/bg-lounge.webp'); }
+.bg-interior { background-image: url('img/bg-interior.webp'); }
+.bg-jungle   { background-image: url('img/bg-jungle.webp'); }
+
+/* на телефоні — портретний кроп головної сцени, легший файл */
+@media (max-width: 600px) {
+  .bg-lounge { background-image: url('img/bg-lounge-mob.webp'); }
+}
+
+/* сторінка меню: фон делікатніший, щоб не сперечався з фото страв */
+body.menu-page .smoke-bg .bg-photo { opacity: 0.5; }
