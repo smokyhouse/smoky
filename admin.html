@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Smoky House — Адмін Панель</title>
+<meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -16,8 +17,8 @@
     <div class="login-logo">SMOKY<span>HOUSE</span></div>
     <div class="login-sub">Панель адміністратора</div>
     <div class="field"><label>Логін</label><input type="text" id="login-user" placeholder="admin" autocomplete="username"></div>
-    <div class="field"><label>Пароль</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
-    <button class="btn-primary" style="width:100%" onclick="doLogin()">Увійти</button>
+    <div class="field"><label>Пароль</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-primary" style="width:100%" id="login-btn" onclick="doLogin()">Увійти</button>
     <div id="login-err"></div>
   </div>
 </div>
@@ -27,6 +28,7 @@
   <div class="topbar">
     <div class="topbar-logo">SMOKY<span>HOUSE</span></div>
     <div class="topbar-right">
+      <span class="sync-badge" id="sync-badge"><span class="dot"></span><span id="sync-text">—</span></span>
       <span class="topbar-page" id="page-label">Меню</span>
       <button class="btn-logout" onclick="doLogout()">Вийти</button>
     </div>
@@ -62,7 +64,8 @@
         <div class="section-header">
           <div class="section-title">Позиції меню</div>
           <div style="display:flex;gap:8px">
-            <button class="btn-add" style="background:rgba(255,255,255,.07);color:var(--text-dim);border:.5px solid var(--border)" onclick="resetToDefault()"><i class="ti ti-refresh"></i> Скинути меню</button>
+            <button class="btn-add" style="background:rgba(255,255,255,.07);color:var(--text-dim);border:.5px solid var(--border)" onclick="pullFromSheets()"><i class="ti ti-refresh"></i> Оновити</button>
+            <button class="btn-add" id="btn-publish" style="background:rgba(255,230,0,.12);color:#ffe600;border:.5px solid rgba(255,230,0,.35)" onclick="publishSite()"><i class="ti ti-world-upload"></i> Опублікувати</button>
             <button class="btn-add" onclick="openAddModal()"><i class="ti ti-plus"></i> Додати</button>
           </div>
         </div>
@@ -87,7 +90,7 @@
         <!-- Desktop table -->
         <div class="table-wrap">
           <table><thead><tr>
-            <th style="width:40%">Позиція</th><th>Категорія</th><th>Вага</th><th>Ціна</th><th>Видно</th><th></th>
+            <th style="width:36px"></th><th style="width:38%">Позиція</th><th>Категорія</th><th>Вага</th><th>Ціна</th><th>Видно</th><th></th>
           </tr></thead><tbody id="menu-tbody"></tbody></table>
         </div>
         <!-- Mobile list -->
@@ -97,7 +100,7 @@
       <!-- PHOTOS PAGE -->
       <div class="page" id="page-photos">
         <div class="section-header"><div class="section-title">Фотографії</div></div>
-        <p style="font-size:12px;color:var(--text-dim);margin-bottom:14px">Тут відображаються назви та локальні шляхи фото. Виберіть файл на ПК, щоб змінити назву в базі.</p>
+        <p style="font-size:12px;color:var(--text-dim);margin-bottom:14px">Фото завантажуються прямо на хостинг (GitHub). Після завантаження сайт оновиться протягом ~1 хвилини.</p>
         <div class="photos-grid" id="photos-grid"></div>
       </div>
 
@@ -127,10 +130,6 @@
       <div class="page" id="page-config">
         <div class="section-header"><div class="section-title">Підключення Google Sheets</div></div>
         <div class="config-card">
-          <div class="config-card-title">Автоматично задіяний веб-інтерфейс</div>
-          <div class="config-desc">Система підключена за замовчуванням до вашого Apps Script та до вашої таблиці. Ви можете змінити URL-адресу нижче у разі перевипуску розгортання.</div>
-        </div>
-        <div class="config-card">
           <div class="config-card-title">URL-адреса Веб-застосунку</div>
           <div class="url-input-wrap">
             <input class="field input" type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/.../exec" style="background:#09090e;border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:#fff;font-size:12px;outline:none;width:100%">
@@ -139,10 +138,18 @@
           <div class="status-row" id="conn-status"><span class="status-dot dot-wait"></span>Не підключено</div>
         </div>
         <div class="config-card">
-          <div class="config-card-title">Синхронізація таблиці</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn-add" onclick="pushToSheets()"><i class="ti ti-upload"></i> Зберегти в Sheets</button>
+          <div class="config-card-title">Синхронізація</div>
+          <div class="config-desc">Кожна зміна зберігається в таблицю автоматично (одна позиція — один запис). Коли закінчили редагувати — натисніть «Опублікувати» на сторінці Меню: сайти читають опубліковану копію і завантажуються миттєво.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
             <button class="btn-add" style="background:rgba(255,255,255,.08);color:var(--text)" onclick="pullFromSheets()"><i class="ti ti-download"></i> Завантажити з Sheets</button>
+            <button class="btn-add" style="background:rgba(255,255,255,.08);color:var(--text)" onclick="pushToSheets()"><i class="ti ti-upload"></i> Повний запис у Sheets</button>
+          </div>
+        </div>
+        <div class="config-card">
+          <div class="config-card-title">Бекапи таблиці</div>
+          <div class="config-desc">Копія таблиці створюється автоматично щопонеділка (~04:00) у папку Google Drive «Smoky House — бекапи таблиці». Зберігаються останні 8 копій.</div>
+          <div style="margin-top:10px">
+            <button class="btn-add" onclick="backupNow()"><i class="ti ti-database-export"></i> Створити бекап зараз</button>
           </div>
         </div>
       </div>
@@ -179,13 +186,15 @@
       <div class="field" style="margin:0"><label>Вага / об'єм</label><input type="text" id="m-weight" placeholder="напр. 250 г"></div>
     </div>
     <div class="field" style="margin-top:14px"><label>Опис / склад</label><textarea id="m-desc" placeholder="Інгредієнти, склад..."></textarea></div>
-    <div class="field"><label>Вибрати фото з папки вашого хостингу</label>
+    <div class="field"><label>Фото страви</label>
       <div class="upload-area">
-        <input type="file" accept="image/*" onchange="handlePhotoUpload(event)">
+        <input type="file" accept="image/*" id="m-photo-file" onchange="handlePhotoUpload(event)">
         <i class="ti ti-photo-up"></i>
-        <span>Виберіть файл (в базу запишеться шлях: img/назва_файлу.webp)</span>
+        <span>Виберіть файл — він завантажиться на хостинг автоматично</span>
       </div>
+      <div class="upload-progress" id="upload-progress">Завантажуємо фото…</div>
       <img class="upload-preview" id="photo-preview">
+      <input type="text" id="m-photo-path" placeholder="або вкажіть шлях/URL вручну" style="margin-top:8px;width:100%;background:#09090e;border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;outline:none" oninput="pendingPhoto=this.value.trim()">
     </div>
     <div class="field" style="display:flex;align-items:center;gap:10px">
       <div class="vis-toggle on" id="m-vis-toggle" onclick="toggleModalVis()"></div>
@@ -193,7 +202,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">Скасувати</button>
-      <button class="btn-save" onclick="saveItem()">Зберегти</button>
+      <button class="btn-save" id="btn-save-item" onclick="saveItem()">Зберегти</button>
     </div>
   </div>
 </div>
@@ -218,96 +227,222 @@
 <div class="toast" id="toast"><i class="ti ti-check"></i><span id="toast-msg"></span></div>
 
 <script>
-// Автозаповнення за замовчуванням при першому запуску
-const DEFAULT_MENU = [
-  {id:'f1',name:'Шоколадні млинці з вишнею',cat:'food',subcat:'Сніданки',weight:'215 г',price:120,desc:'',photo:'img/Shokoladni mlyntsi.webp',vis:true},
-  {id:'f2',name:'Сирники',cat:'food',subcat:'Сніданки',weight:'230/30 г',price:185,desc:'',photo:'img/Sirniki.webp',vis:true},
-  {id:'f4',name:'Салат літній',cat:'food',subcat:'Салати',weight:'180 г',price:180,desc:'',photo:'img/Salat lіtniy.webp',vis:true},
-  {id:'s1',name:'Філадельфія-лосось рол',cat:'sushi',subcat:'',weight:'270 г',price:360,desc:'',photo:'img/Filadelʹfiya-losos.webp',vis:true},
-  {id:'h1',name:'Кальян класік',cat:'hook',subcat:'',weight:'в асортименті',price:380,desc:'Широкий вибір тютюну та безнікотинових сумішей',photo:'',vis:true}
-];
+/* ══════════════════════════════════════════════════════════════
+   SMOKY HOUSE ADMIN v2
+   • Кожна дія = один точковий запис у таблицю (без перезапису всього)
+   • Черга запитів: записи виконуються строго по одному → нуль дублів
+   • Порядок позицій: стрілки ▲▼, зберігається в колонку order
+   • Фото завантажуються на GitHub через бекенд
+   ══════════════════════════════════════════════════════════════ */
 
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdwv4JlTUph-APvm7VUj0mCO86vWLgAcJofcJi-IbV59QqEczVaPlM0v6Y77dUNSTakA/exec';
 const CAT_NAMES = {food:'Їжа',sushi:'Суші та роли',drinks:'Напої',lemon:'Лимонади',tea:'Чаї',bar:'Бар',cocktails:'Коктейлі',hook:'Кальян'};
 const DEFAULT_SETTINGS = {phone:'+38(077) 777-19-25',address:'Харків, вул. Гвардійців-Широнінців, 51/1',instagram:'https://www.instagram.com/Smoky.House_kh',name:'Smoky House',slogan:'Твій оазис диму та релаксу в серці міста',about:'Ми — не просто кальянна.'};
 
 let ITEMS = [];
 let SETTINGS = {};
 let SCRIPT_URL = '';
-let ADMIN_PASSWORD_HASH = '';
+let PASS = '';
 let filterCurrent = 'all';
 let editId = null;
 let deleteId = null;
 let modalVis = true;
 let pendingPhoto = '';
+let uploading = false;
 
-// Auth
-function doLogin() {
-  const u = document.getElementById('login-user').value.trim();
+/* ── API + черга ─────────────────────────────────────────────── */
+
+async function api(body) {
+  const payload = Object.assign({}, body, { password: PASS });
+  const resp = await fetch(SCRIPT_URL, { method:'POST', body: JSON.stringify(payload), headers:{'Content-Type':'text/plain'} });
+  return resp.json();
+}
+
+let chain = Promise.resolve();
+let pendingOps = 0;
+
+function enqueue(label, body, onOk) {
+  pendingOps++;
+  setSync('saving', 'Зберігаємо…');
+  chain = chain
+    .then(() => api(body))
+    .then(r => {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'невідома помилка');
+      if (onOk) onOk(r);
+      if (pendingOps === 1) setSync('ok', 'Збережено');
+    })
+    .catch(err => {
+      setSync('err', 'Помилка запису');
+      showToast(label + ': ' + err.message, true);
+    })
+    .finally(() => { pendingOps--; });
+  return chain;
+}
+
+function setSync(state, text) {
+  const b = document.getElementById('sync-badge');
+  b.className = 'sync-badge ' + state;
+  document.getElementById('sync-text').textContent = text;
+}
+
+/* ── Авторизація ─────────────────────────────────────────────── */
+
+async function doLogin() {
   const p = document.getElementById('login-pass').value;
-  if (u==='admin' && p==='smokyhouse2026') {
-    ADMIN_PASSWORD_HASH = p;
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app').style.display='flex';
-    init();
-  } else {
-    document.getElementById('login-err').textContent='Невірний логін або пароль';
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-err');
+  if (!p) { errEl.textContent = 'Введіть пароль'; return; }
+  btn.disabled = true; btn.textContent = 'Перевіряємо…'; errEl.textContent = '';
+  SCRIPT_URL = localStorage.getItem('sh_script_url') || DEFAULT_SCRIPT_URL;
+  PASS = p;
+  try {
+    const r = await api({ action:'login' });
+    if (r && r.ok) {
+      sessionStorage.setItem('sh_pass', p);
+      showApp();
+    } else {
+      errEl.textContent = 'Невірний пароль';
+      PASS = '';
+    }
+  } catch(e) {
+    errEl.textContent = 'Немає з\'єднання із сервером';
+    PASS = '';
   }
+  btn.disabled = false; btn.textContent = 'Увійти';
 }
 
 function doLogout() {
-  document.getElementById('app').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('login-pass').value='';
-  ADMIN_PASSWORD_HASH = '';
+  sessionStorage.removeItem('sh_pass');
+  PASS = '';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
 }
 
-// Init
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  init();
+}
+
+/* ── Ініціалізація ───────────────────────────────────────────── */
+
 function init() {
-  SCRIPT_URL = localStorage.getItem('sh_script_url') || 'https://script.google.com/macros/s/AKfycbxdwv4JlTUph-APvm7VUj0mCO86vWLgAcJofcJi-IbV59QqEczVaPlM0v6Y77dUNSTakA/exec';
+  SCRIPT_URL = localStorage.getItem('sh_script_url') || DEFAULT_SCRIPT_URL;
+  document.getElementById('script-url-input').value = SCRIPT_URL;
+
+  // миттєво показуємо кеш, поки їде свіже з Sheets
   try {
-    const saved = localStorage.getItem('sh_items');
-    const parsed = saved ? JSON.parse(saved) : null;
-    if (!parsed || parsed.length < 3) {
-      ITEMS = JSON.parse(JSON.stringify(DEFAULT_MENU));
-      localStorage.setItem('sh_items', JSON.stringify(ITEMS));
-    } else {
-      ITEMS = parsed;
-    }
-  } catch(e) {
-    ITEMS = JSON.parse(JSON.stringify(DEFAULT_MENU));
-  }
+    const cached = JSON.parse(localStorage.getItem('sh_items') || 'null');
+    if (Array.isArray(cached) && cached.length) { ITEMS = cached; sortItems(); renderMenu(); renderPhotos(); }
+  } catch(e) {}
   try {
-    const saved = localStorage.getItem('sh_settings');
-    SETTINGS = saved ? JSON.parse(saved) : Object.assign({}, DEFAULT_SETTINGS);
-  } catch(e) {
-    SETTINGS = Object.assign({}, DEFAULT_SETTINGS);
-  }
-  
-  if (SCRIPT_URL) {
-    document.getElementById('script-url-input').value = SCRIPT_URL;
-    updateConnStatus('wait', 'Перевірка з\'єднання...');
-    pullFromSheets(true);
-  }
-  renderMenu();
-  renderPhotos();
+    SETTINGS = JSON.parse(localStorage.getItem('sh_settings') || 'null') || Object.assign({}, DEFAULT_SETTINGS);
+  } catch(e) { SETTINGS = Object.assign({}, DEFAULT_SETTINGS); }
   loadSettingsForm();
+
+  updateConnStatus('wait', 'Перевірка з\'єднання…');
+  setSync('saving', 'Синхронізація…');
+  updatePublishBtn();
+  pullFromSheets(true);
 }
 
-function resetToDefault() {
-  if (!confirm('Скинути меню до стандартного?')) return;
-  ITEMS = JSON.parse(JSON.stringify(DEFAULT_MENU));
-  saveLocal();
-  renderMenu(); renderPhotos();
-  showToast('Локальне меню скинуто ✓');
-  if (SCRIPT_URL) saveToSheets();
+function normalizeItem(i, idx) {
+  return Object.assign({}, i, {
+    vis: i.vis === true || i.vis === 'TRUE' || i.vis === 'true' || i.vis === 1 || i.vis === '1',
+    price: parseInt(i.price) || 0,
+    order: Number(i.order) || (idx + 1)
+  });
 }
 
-function saveLocal() {
+function sortItems() { ITEMS.sort((a,b) => (a.order||0) - (b.order||0)); }
+function maxOrder() { return ITEMS.reduce((m,i) => Math.max(m, Number(i.order)||0), 0); }
+function cacheLocal() {
   localStorage.setItem('sh_items', JSON.stringify(ITEMS));
   localStorage.setItem('sh_settings', JSON.stringify(SETTINGS));
 }
 
-// Navigation
+/* ── Синхронізація з Sheets ──────────────────────────────────── */
+
+async function pullFromSheets(silent = false) {
+  if (!SCRIPT_URL) { showToast('Спочатку вкажіть URL веб-додатку', true); return; }
+  if (!silent) showSaving('Завантажуємо з Google Sheets…');
+  try {
+    const data = await api({ action:'getItems' });
+    if (!silent) hideSaving();
+    if (data && data.ok !== false && data.items) {
+      ITEMS = data.items.map(normalizeItem);
+      sortItems(); cacheLocal(); renderMenu(); renderPhotos();
+      updateConnStatus('ok', 'Підключено ✓');
+      setSync('ok', 'Синхронізовано');
+      if (!silent) showToast('Меню оновлено з Sheets ✓');
+    } else {
+      updateConnStatus('err', 'Помилка: ' + ((data && data.error) || '?'));
+      setSync('err', 'Помилка');
+    }
+  } catch(e) {
+    if (!silent) hideSaving();
+    updateConnStatus('err', 'Помилка з\'єднання');
+    setSync('err', 'Офлайн');
+  }
+}
+
+async function pushToSheets() {
+  if (!confirm('Повністю перезаписати таблицю поточним списком (' + ITEMS.length + ' позицій)?\nЗазвичай це не потрібно — всі зміни зберігаються автоматично.')) return;
+  showSaving('Записуємо все меню в Sheets…');
+  try {
+    const res = await api({ action:'saveItems', items: ITEMS });
+    hideSaving();
+    if (res && res.ok) showToast('Записано ' + res.count + ' позицій ✓');
+    else showToast('Помилка: ' + ((res && res.error) || '?'), true);
+  } catch(e) { hideSaving(); showToast('Помилка з\'єднання', true); }
+}
+
+async function backupNow() {
+  showSaving('Створюємо бекап таблиці…');
+  try {
+    const res = await api({ action:'backupNow' });
+    hideSaving();
+    if (res && res.ok) showToast('Бекап створено у Google Drive ✓');
+    else showToast('Помилка: ' + ((res && res.error) || '?'), true);
+  } catch(e) { hideSaving(); showToast('Помилка з\'єднання', true); }
+}
+
+/* ── Публікація меню на сайт (статичний JSON у репозиторії) ──── */
+
+function markUnpublished() {
+  localStorage.setItem('sh_unpub', '1');
+  updatePublishBtn();
+}
+function updatePublishBtn() {
+  const b = document.getElementById('btn-publish');
+  if (b) b.classList.toggle('pub-dirty', localStorage.getItem('sh_unpub') === '1');
+}
+async function publishSite() {
+  if (pendingOps > 0) { showToast('Зачекайте, зміни ще зберігаються в таблицю…', true); return; }
+  showSaving('Публікуємо меню на сайт…');
+  try {
+    const res = await api({ action:'publishMenu' });
+    hideSaving();
+    if (res && res.ok) {
+      localStorage.removeItem('sh_unpub');
+      updatePublishBtn();
+      showToast(`Опубліковано: ${res.full} позицій (публічно ${res.publicCount}). Сайт оновиться за 1–2 хв ✓`);
+    } else showToast('Помилка публікації: ' + ((res && res.error) || '?'), true);
+  } catch(e) { hideSaving(); showToast('Помилка з\'єднання', true); }
+}
+
+function saveScriptUrl() {
+  const url = document.getElementById('script-url-input').value.trim();
+  if (!url) return;
+  SCRIPT_URL = url;
+  localStorage.setItem('sh_script_url', url);
+  updateConnStatus('wait', 'Перевірка з\'єднання…');
+  pullFromSheets(true);
+}
+
+/* ── Навігація ───────────────────────────────────────────────── */
+
 function goPage(el) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   el.classList.add('active');
@@ -318,7 +453,7 @@ function goPageMob(page, btn) {
   btn.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===page));
   switchPage(page);
-  document.querySelector('.mob-fab').style.display = page==='menu'?'flex':'none';
+  document.querySelector('.mob-fab').style.display = page==='menu' ? 'flex' : 'none';
 }
 function switchPage(page) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -328,8 +463,17 @@ function switchPage(page) {
   if (page==='photos') renderPhotos();
 }
 
-// Render Menu
+/* ── Рендер меню ─────────────────────────────────────────────── */
+
+function groupNeighbors(item) {
+  // сусіди в межах тієї ж категорії + підкатегорії (реальний порядок у меню)
+  const group = ITEMS.filter(i => i.cat === item.cat && (i.subcat||'') === (item.subcat||''));
+  const idx = group.findIndex(i => i.id === item.id);
+  return { prev: idx > 0 ? group[idx-1] : null, next: idx < group.length-1 ? group[idx+1] : null };
+}
+
 function renderMenu() {
+  sortItems();
   const q = (document.getElementById('search').value||'').toLowerCase();
   const rows = ITEMS.filter(i => {
     const mc = filterCurrent==='all' || i.cat===filterCurrent;
@@ -339,13 +483,18 @@ function renderMenu() {
 
   const tbody = document.getElementById('menu-tbody');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:36px;color:var(--text-muted);font-size:13px">Нічого не знайдено</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--text-muted);font-size:13px">Нічого не знайдено</td></tr>`;
   } else {
     tbody.innerHTML = rows.map(item => {
       const th = item.photo
-        ? `<div class="thumb"><img src="${h(item.photo)}" alt=""></div>`
+        ? `<div class="thumb"><img src="${h(item.photo)}" alt="" loading="lazy"></div>`
         : `<div class="thumb"><i class="ti ti-tools-kitchen-2"></i></div>`;
+      const nb = groupNeighbors(item);
       return `<tr>
+        <td><div class="order-btns">
+          <button class="btn-ord" ${nb.prev?'':'disabled'} onclick="moveItem('${item.id}',-1)" title="Вище"><i class="ti ti-chevron-up"></i></button>
+          <button class="btn-ord" ${nb.next?'':'disabled'} onclick="moveItem('${item.id}',1)" title="Нижче"><i class="ti ti-chevron-down"></i></button>
+        </div></td>
         <td><div class="dish-cell">${th}<div>
           <div class="dish-name">${h(item.name)}</div>
           ${item.subcat?`<div class="dish-sub">${h(item.subcat)}</div>`:''}
@@ -367,7 +516,8 @@ function renderMenu() {
     mob.innerHTML = `<div style="text-align:center;padding:36px;color:var(--text-muted);font-size:13px">Нічого не знайдено</div>`;
   } else {
     mob.innerHTML = rows.map(item => {
-      const th = item.photo ? `<img src="${h(item.photo)}" alt="">` : `<i class="ti ti-tools-kitchen-2"></i>`;
+      const th = item.photo ? `<img src="${h(item.photo)}" alt="" loading="lazy">` : `<i class="ti ti-tools-kitchen-2"></i>`;
+      const nb = groupNeighbors(item);
       return `<div class="mob-card">
         <div class="mob-thumb" onclick="openEditModal('${item.id}')">${th}</div>
         <div class="mob-body" onclick="openEditModal('${item.id}')">
@@ -379,6 +529,10 @@ function renderMenu() {
         </div>
         <div class="mob-price">${item.price}₴</div>
         <div class="vis-toggle ${item.vis?'on':''}" onclick="toggleVis('${item.id}')"></div>
+        <div class="mob-ord">
+          <button class="btn-ord" ${nb.prev?'':'disabled'} onclick="moveItem('${item.id}',-1)"><i class="ti ti-chevron-up"></i></button>
+          <button class="btn-ord" ${nb.next?'':'disabled'} onclick="moveItem('${item.id}',1)"><i class="ti ti-chevron-down"></i></button>
+        </div>
       </div>`;
     }).join('');
   }
@@ -398,13 +552,30 @@ function filterCat(el) {
   renderMenu();
 }
 
+/* ── Дії з позиціями (усе — точкові записи) ──────────────────── */
+
 function toggleVis(id) {
   const item = ITEMS.find(i=>i.id===id);
   if (!item) return;
   item.vis = !item.vis;
-  saveLocal();
-  renderMenu();
-  if (SCRIPT_URL) saveToSheets();
+  cacheLocal(); renderMenu();
+  enqueue('Видимість «' + item.name + '»', { action:'updateItem', item });
+  markUnpublished();
+}
+
+function moveItem(id, dir) {
+  const item = ITEMS.find(i=>i.id===id);
+  if (!item) return;
+  const nb = groupNeighbors(item);
+  const other = dir < 0 ? nb.prev : nb.next;
+  if (!other) return;
+  const tmp = item.order; item.order = other.order; other.order = tmp;
+  sortItems(); cacheLocal(); renderMenu();
+  enqueue('Порядок', { action:'reorder', updates: [
+    { id: item.id, order: item.order },
+    { id: other.id, order: other.order }
+  ]});
+  markUnpublished();
 }
 
 function openAddModal() {
@@ -417,6 +588,8 @@ function openAddModal() {
   document.getElementById('m-price').value = '';
   document.getElementById('m-weight').value = '';
   document.getElementById('m-desc').value = '';
+  document.getElementById('m-photo-path').value = '';
+  document.getElementById('m-photo-file').value = '';
   document.getElementById('photo-preview').style.display = 'none';
   modalVis = true;
   updateModalVisUI();
@@ -436,6 +609,8 @@ function openEditModal(id) {
   document.getElementById('m-price').value = item.price;
   document.getElementById('m-weight').value = item.weight || '';
   document.getElementById('m-desc').value = item.desc || '';
+  document.getElementById('m-photo-path').value = item.photo || '';
+  document.getElementById('m-photo-file').value = '';
   const prev = document.getElementById('photo-preview');
   if (item.photo) { prev.src = item.photo; prev.style.display = 'block'; }
   else { prev.style.display = 'none'; }
@@ -452,51 +627,41 @@ function closeModal() {
 
 function onCatChange() {
   const cat = document.getElementById('m-cat').value;
-  document.getElementById('subcat-wrap').style.display = ['food','drinks','sushi','tea','bar'].includes(cat) ? 'block' : 'none';
+  document.getElementById('subcat-wrap').style.display = ['food','drinks','sushi','tea','bar','cocktails'].includes(cat) ? 'block' : 'none';
 }
 
-function toggleModalVis() {
-  modalVis = !modalVis;
-  updateModalVisUI();
-}
+function toggleModalVis() { modalVis = !modalVis; updateModalVisUI(); }
 function updateModalVisUI() {
-  const t = document.getElementById('m-vis-toggle');
-  const l = document.getElementById('m-vis-label');
-  t.classList.toggle('on', modalVis);
-  l.textContent = modalVis ? 'Видимо в меню' : 'Приховано';
-}
-
-// Запис виключно назви файлу для локальної папки img/
-function handlePhotoUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  pendingPhoto = 'img/' + file.name;
-  const prev = document.getElementById('photo-preview');
-  prev.src = URL.createObjectURL(file);
-  prev.style.display = 'block';
+  document.getElementById('m-vis-toggle').classList.toggle('on', modalVis);
+  document.getElementById('m-vis-label').textContent = modalVis ? 'Видимо в меню' : 'Приховано';
 }
 
 function saveItem() {
+  if (uploading) { showToast('Зачекайте, фото ще завантажується…', true); return; }
   const name = document.getElementById('m-name').value.trim();
   if (!name) { showToast('Введіть назву позиції', true); return; }
+  const isEdit = !!editId;
   const price = parseInt(document.getElementById('m-price').value) || 0;
   const cat = document.getElementById('m-cat').value;
   const subcat = document.getElementById('m-subcat').value.trim();
   const weight = document.getElementById('m-weight').value.trim();
   const desc = document.getElementById('m-desc').value.trim();
 
-  if (editId) {
+  if (isEdit) {
     const item = ITEMS.find(i=>i.id===editId);
-    if (item) { item.name=name; item.cat=cat; item.subcat=subcat; item.weight=weight; item.price=price; item.desc=desc; item.photo=pendingPhoto; item.vis=modalVis; }
+    if (item) {
+      Object.assign(item, { name, cat, subcat, weight, price, desc, photo: pendingPhoto, vis: modalVis });
+      enqueue('Збереження «' + name + '»', { action:'updateItem', item });
+    }
   } else {
-    ITEMS.push({id:'x'+Date.now(), name, cat, subcat, weight, price, desc, photo:pendingPhoto, vis:modalVis});
+    const item = { id:'x'+Date.now(), name, cat, subcat, weight, price, desc, photo: pendingPhoto, vis: modalVis, order: maxOrder()+1 };
+    ITEMS.push(item);
+    enqueue('Додавання «' + name + '»', { action:'addItem', item });
   }
-  saveLocal();
-  renderMenu();
-  renderPhotos();
+  sortItems(); cacheLocal(); renderMenu(); renderPhotos();
   closeModal();
-  showToast(editId ? 'Збережено ✓' : 'Додано ✓');
-  if (SCRIPT_URL) saveToSheets();
+  markUnpublished();
+  showToast(isEdit ? 'Збережено ✓' : 'Додано ✓');
 }
 
 function askDelete(id) {
@@ -508,11 +673,90 @@ function askDelete(id) {
 function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('open'); deleteId=null; }
 function doDelete() {
   if (!deleteId) return;
-  ITEMS = ITEMS.filter(i=>i.id!==deleteId);
-  saveLocal(); renderMenu(); renderPhotos(); closeConfirm();
+  const id = deleteId;
+  const item = ITEMS.find(i=>i.id===id);
+  ITEMS = ITEMS.filter(i=>i.id!==id);
+  cacheLocal(); renderMenu(); renderPhotos(); closeConfirm();
   showToast('Видалено');
-  if (SCRIPT_URL) saveToSheets();
+  enqueue('Видалення' + (item ? ' «'+item.name+'»' : ''), { action:'deleteItem', id });
+  markUnpublished();
 }
+
+/* ── Завантаження фото на хостинг ────────────────────────────── */
+
+async function handlePhotoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  await uploadPhotoFile(file, url => {
+    pendingPhoto = url;
+    document.getElementById('m-photo-path').value = url;
+    const prev = document.getElementById('photo-preview');
+    prev.src = URL.createObjectURL(file);
+    prev.style.display = 'block';
+  });
+}
+
+async function uploadPhotoFile(file, onDone) {
+  const prog = document.getElementById('upload-progress');
+  const saveBtn = document.getElementById('btn-save-item');
+  uploading = true;
+  if (saveBtn) saveBtn.disabled = true;
+  prog.classList.add('show');
+  try {
+    prog.textContent = 'Стискаємо зображення…';
+    const { base64, mime } = await compressImage(file);
+    prog.textContent = 'Завантажуємо на хостинг…';
+    const base = (document.getElementById('m-name').value.trim() || file.name.replace(/\.[^.]+$/, ''));
+    const filename = base + '-' + Date.now().toString(36) + '.webp';
+    const res = await api({ action:'uploadImage', filename, mimeType: mime, dataBase64: base64 });
+    if (res && res.ok) {
+      onDone(res.path);
+      prog.textContent = '✓ Завантажено. Сайт оновиться протягом ~1 хв.';
+      showToast('Фото завантажено на хостинг ✓');
+      setTimeout(()=>prog.classList.remove('show'), 4000);
+    } else {
+      prog.textContent = '⚠️ ' + ((res && res.error) || 'Помилка завантаження');
+      showToast('Помилка завантаження фото', true);
+    }
+  } catch(err) {
+    prog.textContent = '⚠️ Помилка: ' + err.message;
+    showToast('Помилка завантаження фото', true);
+  }
+  uploading = false;
+  if (saveBtn) saveBtn.disabled = false;
+}
+
+function compressImage(file, maxDim = 1200, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (Math.max(width, height) > maxDim) {
+        const k = maxDim / Math.max(width, height);
+        width = Math.round(width * k);
+        height = Math.round(height * k);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(img.src);
+      canvas.toBlob(blob => {
+        const finish = (b, mime) => {
+          const fr = new FileReader();
+          fr.onload = () => resolve({ base64: fr.result.split(',')[1], mime });
+          fr.onerror = () => reject(new Error('read failed'));
+          fr.readAsDataURL(b);
+        };
+        if (blob && blob.type === 'image/webp') finish(blob, 'image/webp');
+        else canvas.toBlob(b2 => b2 ? finish(b2, 'image/jpeg') : reject(new Error('compress failed')), 'image/jpeg', quality);
+      }, 'image/webp', quality);
+    };
+    img.onerror = () => reject(new Error('не вдалося прочитати зображення'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/* ── Сторінка «Фотографії» ───────────────────────────────────── */
 
 function renderPhotos() {
   const grid = document.getElementById('photos-grid');
@@ -520,7 +764,7 @@ function renderPhotos() {
   if (!withPhoto.length) { grid.innerHTML='<p style="color:var(--text-muted);font-size:13px">Немає позицій з фото</p>'; return; }
   grid.innerHTML = withPhoto.map(item => `
     <div class="photo-card">
-      <div class="photo-card-img"><img src="${h(item.photo)}" alt="${h(item.name)}"></div>
+      <div class="photo-card-img"><img src="${h(item.photo)}" alt="${h(item.name)}" loading="lazy"></div>
       <div class="photo-card-info">
         <div class="photo-card-name">${h(item.name)}</div>
         <div class="photo-card-sub">${h(item.photo)}</div>
@@ -535,22 +779,38 @@ function renderPhotos() {
 function replacePhoto(id) {
   const inp = document.createElement('input');
   inp.type='file'; inp.accept='image/*';
-  inp.onchange = e => {
+  inp.onchange = async e => {
     const file = e.target.files[0]; if(!file) return;
-    const item = ITEMS.find(i=>i.id===id);
-    if (item) { 
-      item.photo = 'img/' + file.name; 
-      saveLocal(); renderPhotos(); renderMenu(); 
-      showToast('Шлях замінено на img/' + file.name + ' ✓'); 
-      if(SCRIPT_URL) saveToSheets(); 
-    }
+    const item = ITEMS.find(i=>i.id===id); if(!item) return;
+    showSaving('Завантажуємо фото на хостинг…');
+    try {
+      const { base64, mime } = await compressImage(file);
+      const filename = item.name + '-' + Date.now().toString(36) + '.webp';
+      const res = await api({ action:'uploadImage', filename, mimeType: mime, dataBase64: base64 });
+      hideSaving();
+      if (res && res.ok) {
+        item.photo = res.path;
+        cacheLocal(); renderPhotos(); renderMenu();
+        showToast('Фото замінено ✓');
+        enqueue('Фото «' + item.name + '»', { action:'updateItem', item });
+        markUnpublished();
+      } else showToast('Помилка: ' + ((res && res.error) || '?'), true);
+    } catch(err) { hideSaving(); showToast('Помилка завантаження', true); }
   };
   inp.click();
 }
+
 function removePhoto(id) {
   const item = ITEMS.find(i=>i.id===id);
-  if (item) { item.photo=''; saveLocal(); renderPhotos(); renderMenu(); showToast('Фото видалено'); if(SCRIPT_URL) saveToSheets(); }
+  if (!item) return;
+  item.photo = '';
+  cacheLocal(); renderPhotos(); renderMenu();
+  showToast('Фото відв\'язано від позиції');
+  enqueue('Фото «' + item.name + '»', { action:'updateItem', item });
+  markUnpublished();
 }
+
+/* ── Налаштування ────────────────────────────────────────────── */
 
 function loadSettingsForm() {
   document.getElementById('s-phone').value = SETTINGS.phone||'';
@@ -567,86 +827,49 @@ function saveSettings() {
   SETTINGS.name = document.getElementById('s-name').value;
   SETTINGS.slogan = document.getElementById('s-slogan').value;
   SETTINGS.about = document.getElementById('s-about').value;
-  saveLocal();
+  cacheLocal();
   showToast('Налаштування збережено ✓');
-  if (SCRIPT_URL) saveSettingsToSheets();
+  enqueue('Налаштування', { action:'saveSettings', settings: SETTINGS });
 }
 
-async function apiCall(body) {
-  body.password = ADMIN_PASSWORD_HASH;
-  const resp = await fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify(body), headers:{'Content-Type':'text/plain'}});
-  return await resp.json();
-}
-
-function saveScriptUrl() {
-  const url = document.getElementById('script-url-input').value.trim();
-  if (!url) return;
-  SCRIPT_URL = url;
-  localStorage.setItem('sh_script_url', url);
-  updateConnStatus('wait', 'Перевірка з\'єднання...');
-  pullFromSheets(true);
-}
-
-async function pullFromSheets(silent=false) {
-  if (!SCRIPT_URL) { showToast('Спочатку вкажіть URL веб-додатку', true); return; }
-  if (!silent) showSaving('Завантажуємо з Google Sheets...');
-  try {
-    const data = await apiCall({action:'getItems'});
-    if (!silent) hideSaving();
-    if (data && data.items && data.items.length) {
-      ITEMS = data.items.map(i=>({...i, vis:i.vis===true||i.vis==='TRUE'||i.vis==='true'||i.vis===1, price:parseInt(i.price)||0}));
-      saveLocal(); renderMenu(); renderPhotos();
-      updateConnStatus('ok', 'Підключено ✓');
-      if (!silent) showToast('Меню оновлено з Sheets ✓');
-    } else {
-      updateConnStatus('ok', 'Підключено (порожня таблиця)');
-    }
-  } catch(e) {
-    if (!silent) hideSaving();
-    updateConnStatus('err', 'Помилка з\'єднання');
-  }
-}
-
-async function saveToSheets() { if (SCRIPT_URL) apiCall({action:'saveItems', items:ITEMS}); }
-async function saveSettingsToSheets() { if (SCRIPT_URL) apiCall({action:'saveSettings', settings:SETTINGS}); }
-
-async function pushToSheets() {
-  if (!SCRIPT_URL) { showToast('Спочатку вкажіть URL', true); return; }
-  showSaving('Зберігаємо в Google Sheets...');
-  try {
-    const res = await apiCall({action:'saveItems', items:ITEMS});
-    hideSaving();
-    if (res && res.ok) showToast('Дані збережено в Sheets ✓');
-    else showToast('Помилка запису', true);
-  } catch(e) { hideSaving(); showToast('Помилка з\'єднання', true); }
-}
+/* ── UI-дрібниці ─────────────────────────────────────────────── */
 
 function updateConnStatus(type, text) {
   const el = document.getElementById('conn-status');
   const cls = type==='ok'?'dot-ok':type==='err'?'dot-err':'dot-wait';
   el.innerHTML = `<span class="status-dot ${cls}"></span>${text}`;
 }
-
 function showSaving(text) {
   document.getElementById('saving-text').textContent = text;
   document.getElementById('saving').classList.add('open');
 }
 function hideSaving() { document.getElementById('saving').classList.remove('open'); }
-
 function showToast(msg, err=false) {
   const t = document.getElementById('toast');
   document.getElementById('toast-msg').textContent = msg;
   t.classList.toggle('err', err);
   t.querySelector('i').className = err ? 'ti ti-alert-circle' : 'ti ti-check';
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 3000);
+  setTimeout(()=>t.classList.remove('show'), 3200);
 }
-
 function h(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 document.getElementById('modal-overlay').addEventListener('click', e=>{if(e.target===document.getElementById('modal-overlay'))closeModal();});
 document.getElementById('confirm-overlay').addEventListener('click', e=>{if(e.target===document.getElementById('confirm-overlay'))closeConfirm();});
 document.addEventListener('keydown', e=>{if(e.key==='Escape'){closeModal();closeConfirm();}});
+window.addEventListener('beforeunload', e => {
+  if (pendingOps > 0) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// автовхід, якщо сесія жива
+(function(){
+  const saved = sessionStorage.getItem('sh_pass');
+  if (saved) {
+    PASS = saved;
+    SCRIPT_URL = localStorage.getItem('sh_script_url') || DEFAULT_SCRIPT_URL;
+    api({ action:'login' }).then(r => { if (r && r.ok) showApp(); }).catch(()=>{});
+  }
+})();
 </script>
 </body>
 </html>
