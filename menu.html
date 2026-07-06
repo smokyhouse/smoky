@@ -8,8 +8,23 @@
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
   <meta name="googlebot" content="noindex, nofollow">
   <link rel="icon" type="image/png" sizes="32x32" href="img/SMOKY.png">
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+
+  <script>
+  /* Стартуємо завантаження меню якомога раніше — паралельно з CSS та шрифтами */
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdwv4JlTUph-APvm7VUj0mCO86vWLgAcJofcJi-IbV59QqEczVaPlM0v6Y77dUNSTakA/exec';
+  const SHEET_ID   = '11_ZzSiF9TqEuJZGf7-ziqmp359JJOqrXmOwu59vo2m4';
+  const STATIC_MENU_URL = 'menu.json';
+  // 1) статичний JSON з хостингу (миттєво) → 2) Apps Script → 3) CSV
+  window.__menuPromise = fetch(STATIC_MENU_URL, { cache: 'no-cache' })
+    .then(r => r.ok ? r.json() : null)
+    .catch(() => null);
+  </script>
 
   <style>
   /* ── Tabs: центр на десктопі, скрол на мобілі ── */
@@ -89,7 +104,7 @@
 <body class="menu-page">
 
 <!-- Smoke background -->
-<div class="smoke-bg"><canvas id="smoke-canvas"></canvas></div>
+<div class="smoke-bg"><div class="bg-photo bg-lounge"></div><canvas id="smoke-canvas"></canvas></div>
 
 <!-- Top bar -->
 <div class="top-bar">
@@ -125,7 +140,7 @@
 <!-- Modal -->
 <div id="item-modal" class="modal-overlay" onclick="closeModal()">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <span class="modal-close" onclick="closeModal()">&times;</span>
+    <span class="modal-close" onclick="closeModal()" aria-label="Закрити">&times;</span>
     <div class="modal-img-container" id="modal-img-wrap" style="display:none">
       <img class="modal-img" id="modal-image" src="" alt="">
       <div class="zoom-hint">Натисніть для збільшення</div>
@@ -140,10 +155,10 @@
 <footer>© 2026 Smoky House. Усі права захищені. Розроблено з ❤️ для справжніх поціновувачів диму.</footer>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdwv4JlTUph-APvm7VUj0mCO86vWLgAcJofcJi-IbV59QqEczVaPlM0v6Y77dUNSTakA/exec';
-const SHEET_ID   = '11_ZzSiF9TqEuJZGf7-ziqmp359JJOqrXmOwu59vo2m4';
-
 // Повне меню з алкоголем (внутрішня версія)
+const HIDDEN_CATS = new Set([]);
+const INJECT_SCHEMA = false;
+
 const TAB_TO_CAT = {
   food: 'food',
   sushi: 'sushi',
@@ -170,31 +185,70 @@ const GRID_PHOTO_CATS = new Set(['food', 'sushi']);
 const LIST_CATS = new Set(['drinks']);
 // Всі інші — текстова сітка (lemon, tea, hook)
 
+const CACHE_KEY = 'sh_menu_cache_v2';
 let ALL_ITEMS = [];
 let activeTab = 'food';
 
-async function loadMenu() {
+/* ── Швидке завантаження: спершу кеш (миттєво), потім свіжі дані ── */
+
+function isVisible(i) {
+  return i.vis === true || i.vis === 'TRUE' || i.vis === 'true' || i.vis === 1 || i.vis === '1';
+}
+
+function prepare(items) {
+  return items
+    .filter(i => isVisible(i) && !HIDDEN_CATS.has(i.cat))
+    .map((i, idx) => Object.assign({}, i, { order: Number(i.order) || (idx + 1), price: parseInt(i.price) || 0 }))
+    .sort((a, b) => a.order - b.order);
+}
+
+function readCache() {
   try {
-    const r = await fetch(SCRIPT_URL + '?action=getItems');
-    const d = await r.json();
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY));
+    if (c && Array.isArray(c.items) && c.items.length) return c.items;
+  } catch (e) {}
+  return null;
+}
+
+function writeCache(items) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), items })); } catch (e) {}
+}
+
+async function loadMenu() {
+  // 1. Кеш із минулого візиту → меню видно одразу, без спінера
+  const cached = readCache();
+  if (cached) {
+    ALL_ITEMS = prepare(cached);
+    renderAll();
+  }
+
+  // 2. Свіжі дані: опублікований JSON (стартував у <head>), інакше — Apps Script
+  try {
+    let d = await window.__menuPromise;
+    if (!(d && d.items && d.items.length)) {
+      d = await fetch(SCRIPT_URL + '?action=getItems').then(r => r.json());
+    }
     if (d && d.items && d.items.length) {
-      // Внутрішня версія: показуємо всі видимі позиції включно з баром та коктейлями
-      ALL_ITEMS = d.items.filter(i => {
-        const vis = i.vis === true || i.vis === 'TRUE' || i.vis === 'true' || i.vis === 1 || i.vis === '1';
-        return vis;
-      });
-      renderAll();
+      writeCache(d.items);
+      const fresh = prepare(d.items);
+      if (!cached || JSON.stringify(fresh) !== JSON.stringify(ALL_ITEMS)) {
+        ALL_ITEMS = fresh;
+        renderAll();
+      }
       return;
     }
-    await loadCSV();
-  } catch(e) { await loadCSV(); }
+    if (!cached) await loadCSV();
+  } catch (e) {
+    if (!cached) await loadCSV();
+  }
 }
 
 async function loadCSV() {
   try {
     const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Menu`);
     const t = await r.text();
-    ALL_ITEMS = parseCSV(t);
+    ALL_ITEMS = prepare(parseCSV(t));
+    writeCache(ALL_ITEMS);
     renderAll();
   } catch(e) {
     document.getElementById('menu-container').innerHTML =
@@ -222,8 +276,9 @@ function parseCSV(text) {
     headers.forEach((h, i) => obj[h.trim()] = (vals[i] || '').trim());
     obj.vis = obj.vis !== 'FALSE' && obj.vis !== 'false' && obj.vis !== '0';
     obj.price = parseInt(obj.price) || 0;
+    obj.order = parseInt(obj.order) || 0;
     return obj;
-  }).filter(i => i.name && i.vis);
+  }).filter(i => i.name);
 }
 
 function renderAll() {
@@ -252,6 +307,43 @@ function renderAll() {
       });
     }
   });
+  injectMenuSchema();
+}
+
+/* ── Schema.org Menu (лише публічна версія): Google бачить позиції та ціни ── */
+function injectMenuSchema() {
+  if (!INJECT_SCHEMA || !ALL_ITEMS.length) return;
+  const sections = [];
+  Object.keys(TAB_TO_CAT).forEach(tab => {
+    const cat = TAB_TO_CAT[tab];
+    const its = ALL_ITEMS.filter(i => i.cat === cat);
+    if (!its.length) return;
+    sections.push({
+      "@type": "MenuSection",
+      "name": TAB_TITLES[tab].replace(/^\S+\s/, ''),
+      "hasMenuItem": its.map(i => {
+        const m = { "@type": "MenuItem", "name": i.name,
+          "offers": { "@type": "Offer", "price": String(i.price), "priceCurrency": "UAH" } };
+        if (i.desc) m.description = i.desc;
+        return m;
+      })
+    });
+  });
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "Menu",
+    "name": "Меню Smoky House",
+    "inLanguage": "uk",
+    "hasMenuSection": sections
+  };
+  let el = document.getElementById('menu-jsonld');
+  if (!el) {
+    el = document.createElement('script');
+    el.type = 'application/ld+json';
+    el.id = 'menu-jsonld';
+    document.head.appendChild(el);
+  }
+  el.textContent = JSON.stringify(data);
 }
 
 function buildCategory(tab, cat, items) {
@@ -271,7 +363,7 @@ function buildPhotoGridCategory(title, items) {
     html += '<div class="menu-grid">';
     arr.forEach(i => {
       const ph = i.photo
-        ? `<img src="${esc(i.photo)}" alt="${esc(i.name)}" loading="lazy">`
+        ? `<img src="${esc(i.photo)}" alt="${esc(i.name)}" loading="lazy" decoding="async">`
         : `<div class="no-photo"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>`;
       html += `<div class="menu-card-photo"
         data-name="${escA(i.name)}" data-weight="${escA(i.weight||'')}"
@@ -421,6 +513,8 @@ loadMenu();
 (function() {
   const canvas = document.getElementById('smoke-canvas');
   if (!canvas) return;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
   const ctx = canvas.getContext('2d');
   let W, H, particles = [];
 
@@ -469,13 +563,22 @@ loadMenu();
     }
   }
 
-  for (let i = 0; i < 55; i++) {
+  const isMobile = window.innerWidth < 600;
+  const COUNT = isMobile ? 30 : 55; // менше частинок на мобільному = плавніше скрол
+  for (let i = 0; i < COUNT; i++) {
     const p = new Particle(true);
     p.life = Math.floor(Math.random() * p.maxLife);
     particles.push(p);
   }
 
+  let running = true;
+  document.addEventListener('visibilitychange', () => {
+    running = !document.hidden;
+    if (running) animate();
+  });
+
   function animate() {
+    if (!running) return;
     ctx.clearRect(0, 0, W, H);
     particles.forEach(p => { p.update(); p.draw(); });
     requestAnimationFrame(animate);
