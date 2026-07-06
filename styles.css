@@ -2104,4 +2104,4 @@ td { padding: 10px 14px; vertical-align: middle; }
 }
 
 /* сторінка меню: фон делікатніший, щоб не сперечався з фото страв */
-body.menu-page .smoke-bg .bg-photo { opacity: 0.2; }
+body.menu-page .smoke-bg .bg-photo { opacity: 0.8; }
