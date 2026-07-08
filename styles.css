@@ -2084,6 +2084,20 @@ td { padding: 10px 14px; vertical-align: middle; }
 }
 .smoke-bg canvas { position: relative; z-index: 1; }
 
+/* Відео-фон: лежить поверх статичного фото всередині .bg-photo.
+   Фото лишається як миттєвий фолбек — показується, поки відео вантажиться,
+   і якщо відео не завантажиться взагалі. Прозорість (0.65 / 0.5 на меню)
+   та віньєтка успадковуються від батьківського .bg-photo. */
+.smoke-bg .bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  pointer-events: none;
+}
+
 /* віньєтка: краї та низ темніші — контент читається на будь-якій ділянці */
 .smoke-bg .bg-photo::after {
   content: '';
@@ -2094,14 +2108,16 @@ td { padding: 10px 14px; vertical-align: middle; }
     linear-gradient(180deg, rgba(5,5,8,0.5) 0%, rgba(5,5,8,0.3) 30%, rgba(5,5,8,0.85) 100%);
 }
 
-.bg-lounge   { background-image: url('img/bg-lounge.webp'); }
-.bg-interior { background-image: url('img/bg-interior.webp'); }
-.bg-jungle   { background-image: url('img/bg-jungle.webp'); }
+/* Абсолютні URL: фонові фото лежать у репозиторії GitHub Pages,
+   на хостингу kh.ua папки img немає — відносні шляхи там дають 404 */
+.bg-lounge   { background-image: url('https://smokyhouse.github.io/smoky/img/bg-lounge.webp'); }
+.bg-interior { background-image: url('https://smokyhouse.github.io/smoky/img/bg-interior.webp'); }
+.bg-jungle   { background-image: url('https://smokyhouse.github.io/smoky/img/bg-jungle.webp'); }
 
 /* на телефоні — портретний кроп головної сцени, легший файл */
 @media (max-width: 600px) {
-  .bg-lounge { background-image: url('img/bg-lounge-mob.webp'); }
+  .bg-lounge { background-image: url('https://smokyhouse.github.io/smoky/img/bg-lounge-mob.webp'); }
 }
 
 /* сторінка меню: фон делікатніший, щоб не сперечався з фото страв */
-body.menu-page .smoke-bg .bg-photo { opacity: 0.8; }
+body.menu-page .smoke-bg .bg-photo { opacity: 0.5; }
