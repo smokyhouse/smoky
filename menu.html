@@ -7,7 +7,8 @@
   <meta name="description" content="Повне меню Smoky House: їжа, суші, напої, бар, коктейлі, кальяни.">
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
   <meta name="googlebot" content="noindex, nofollow">
-  <link rel="icon" type="image/png" sizes="32x32" href="img/SMOKY.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://smokyhouse.github.io/smoky/img/SMOKY.png">
+  <link rel="preconnect" href="https://smokyhouse.github.io">
   <link rel="preconnect" href="https://script.google.com">
   <link rel="preconnect" href="https://script.googleusercontent.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -104,7 +105,38 @@
 <body class="menu-page">
 
 <!-- Smoke background -->
-<div class="smoke-bg"><div class="bg-photo bg-lounge"></div><canvas id="smoke-canvas"></canvas></div>
+<div class="smoke-bg">
+  <div class="bg-photo bg-lounge">
+    <video class="bg-video" autoplay muted loop playsinline preload="auto" aria-hidden="true"
+           data-src-desktop="bg-lounge.mp4" data-src-mobile="bg-lounge-mob.mp4"></video>
+  </div>
+  <canvas id="smoke-canvas"></canvas>
+</div>
+<script>
+/* Вибір фонового відео за шириною екрана.
+   Атрибут media на <source> у <video> ненадійний (Chrome та ін. його ігнорують),
+   тому джерело задаємо через matchMedia — вантажиться лише потрібне одне,
+   і перемикається при повороті екрана / ресайзі. */
+(function () {
+  var v = document.querySelector('.bg-video');
+  if (!v) return;
+  var mq = window.matchMedia('(max-width: 600px)');
+  var current = '';
+  function pick() {
+    var src = mq.matches ? v.getAttribute('data-src-mobile') : v.getAttribute('data-src-desktop');
+    if (src && src !== current) {
+      current = src;
+      v.src = src;
+      v.load();
+      var p = v.play();
+      if (p && p.catch) p.catch(function () {});
+    }
+  }
+  pick();
+  if (mq.addEventListener) mq.addEventListener('change', pick);
+  else if (mq.addListener) mq.addListener(pick);
+})();
+</script>
 
 <!-- Top bar -->
 <div class="top-bar">
@@ -195,10 +227,18 @@ function isVisible(i) {
   return i.vis === true || i.vis === 'TRUE' || i.vis === 'true' || i.vis === 1 || i.vis === '1';
 }
 
+/* Фото в таблиці записані відносно (img/...) — підставляємо домен GitHub Pages,
+   де вони фізично лежать, щоб сторінка працювала з будь-якого хостингу */
+const PHOTO_BASE = 'https://smokyhouse.github.io/smoky/';
+function absPhoto(p) {
+  if (!p) return p;
+  return /^https?:\/\//i.test(p) ? p : PHOTO_BASE + String(p).replace(/^\.?\//, '');
+}
+
 function prepare(items) {
   return items
     .filter(i => isVisible(i) && !HIDDEN_CATS.has(i.cat))
-    .map((i, idx) => Object.assign({}, i, { order: Number(i.order) || (idx + 1), price: parseInt(i.price) || 0 }))
+    .map((i, idx) => Object.assign({}, i, { order: Number(i.order) || (idx + 1), price: parseInt(i.price) || 0, photo: absPhoto(i.photo) }))
     .sort((a, b) => a.order - b.order);
 }
 
