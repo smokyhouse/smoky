@@ -9,10 +9,10 @@
   <meta property="og:title" content="Smoky House | Твій оазис диму">
   <meta property="og:description" content="Відкрий для себе мистецтво кальяну на новому рівні.">
   <meta property="og:image" content="https://smokyhouse.github.io/smoky/img/SMOKY%20HOUSE.png">
-  <meta property="og:url" content="https://smokyhouse.github.io/smoky/">
-  <link rel="canonical" href="https://smokyhouse.kh.ua">
+  <meta property="og:url" content="https://smokyhouse.kh.ua">
+  <link rel="canonical" href="https://smokyhouse.kh.ua/">
   <link rel="icon" type="image/png" sizes="32x32" href="https://smokyhouse.github.io/smoky/img/SMOKY.png">
-  <link rel="preconnect" href="https://smokyhouse.github.io/">
+  <link rel="preconnect" href="https://smokyhouse.github.io">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -50,11 +50,42 @@
 <body>
 
 <!-- Smoke background -->
-<div class="smoke-bg"><div class="bg-photo bg-lounge"></div><canvas id="smoke-canvas"></canvas></div>
+<div class="smoke-bg">
+  <div class="bg-photo bg-lounge">
+    <video class="bg-video" autoplay muted loop playsinline preload="auto" aria-hidden="true"
+           data-src-desktop="bg-lounge.mp4" data-src-mobile="bg-lounge-mob.mp4"></video>
+  </div>
+  <canvas id="smoke-canvas"></canvas>
+</div>
+<script>
+/* Вибір фонового відео за шириною екрана.
+   Атрибут media на <source> у <video> ненадійний (Chrome та ін. його ігнорують),
+   тому джерело задаємо через matchMedia — вантажиться лише потрібне одне,
+   і перемикається при повороті екрана / ресайзі. */
+(function () {
+  var v = document.querySelector('.bg-video');
+  if (!v) return;
+  var mq = window.matchMedia('(max-width: 600px)');
+  var current = '';
+  function pick() {
+    var src = mq.matches ? v.getAttribute('data-src-mobile') : v.getAttribute('data-src-desktop');
+    if (src && src !== current) {
+      current = src;
+      v.src = src;
+      v.load();
+      var p = v.play();
+      if (p && p.catch) p.catch(function () {});
+    }
+  }
+  pick();
+  if (mq.addEventListener) mq.addEventListener('change', pick);
+  else if (mq.addListener) mq.addListener(pick);
+})();
+</script>
 
 <!-- Header (оригінальний дизайн) -->
 <header>
-  <a href="https://smokyhouse.github.io/smoky/index.html" class="logo-text">SMOKY<span>HOUSE</span></a>
+  <a href="index.html" class="logo-text">SMOKY<span>HOUSE</span></a>
   <nav>
     <a href="#promos">Акції</a>
     <a href="#about">Про нас</a>
